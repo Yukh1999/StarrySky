@@ -1,4 +1,6 @@
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.impute import SimpleImputer
+import numpy as np
 
 
 def normalization():
@@ -54,6 +56,36 @@ def standardization():
     print(output)
 
 
+def miss_value():
+    """
+    缺失值处理
+    """
+
+    # 原始数据
+    ori_data = [
+        [5, 7, 12, 19],
+        [6, np.nan, 9, 3],
+        [np.nan, 12, 13, 15],
+        [1, 3, 11, 6],
+        [2, 4, 6, np.nan]
+    ]
+
+    # 实例化一个缺失值填补类
+    im = SimpleImputer(missing_values=np.nan, strategy='mean')
+
+    # 缺失值处理
+    output = im.fit_transform(ori_data)
+
+    # 输出结果
+    # 原始数据
+    print('原始数据')
+    print(ori_data)
+
+    # 填补后的数据
+    print('缺失值填补后数据')
+    print(output)
+
+
 if __name__ == '__main__':
     # 调用归一化示例
     normalization()
@@ -61,3 +93,7 @@ if __name__ == '__main__':
     # 调用标准化示例
     print('-' * 100)
     standardization()
+
+    # 调用缺失值填补示例
+    print('-' * 100)
+    miss_value()

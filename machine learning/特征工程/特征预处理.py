@@ -1,4 +1,5 @@
-from sklearn.preprocessing import MinMaxScaler,StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+
 
 def normalization():
     """
@@ -16,7 +17,7 @@ def normalization():
     print(ori_vec)
 
     # 实例化一个缩放工具类
-    mm = MinMaxScaler(feature_range=(0,1)) # feature_range 默认是 (0,1)，表示要将原始数据映射的目标区间
+    mm = MinMaxScaler(feature_range=(0, 1))  # feature_range 默认是 (0,1)，表示要将原始数据映射的目标区间
 
     # 进行数据转化
     output = mm.fit_transform(ori_vec)
@@ -43,7 +44,7 @@ def standardization():
     print(ori_vec)
 
     # 实例化一个标准化工具类
-    std = StandardScaler() # feature_range 默认是 (0,1)，表示要将原始数据映射的目标区间
+    std = StandardScaler()  # feature_range 默认是 (0,1)，表示要将原始数据映射的目标区间
 
     # 进行数据转化
     output = std.fit_transform(ori_vec)
@@ -51,8 +52,6 @@ def standardization():
     # 输出数据
     print('标准化数据')
     print(output)
-
-
 
 
 if __name__ == '__main__':

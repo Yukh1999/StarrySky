@@ -23,28 +23,28 @@ def xi(E_C, E_J):
 
 # 输入值
 # 自电容
-cap_q = 50e-15
-cap_c = 45e-15
+cap_q = 27.55497e-15
+cap_c = 84e-15
 
 # 约瑟夫森电感
 ind_junc_q = 10e-9
-ind_junc_c = 6e-9
+ind_junc_c = 10e-9
 
 # 对地电容
-cap_gq = 20e-15
-cap_gc = 100e-15
+cap_gq = 41e-15
+cap_gc = 140e-15
 
 # 互电容
 # qubit_1 和 coupler 互电容: qubit_1(1,2), coupler(3,4)
-cap_23 = 10e-15
-cap_14 = 10e-15
+cap_23 = 0.5e-15
+cap_14 = 1e-15
 cap_13 = 10e-15
-cap_24 = 10e-15
+cap_24 = 0.04e-15
 
 # qubit_2 和 coupler 互电容: qubit_2(5,6), coupler(3,4)
 cap_36 = 10e-15
-cap_35 = 10e-15
-cap_45 = 10e-15
+cap_35 = 0.52e-15
+cap_45 = 0.05e-15
 cap_46 = 10e-15
 
 
@@ -81,9 +81,9 @@ g_2c = ((E_2c / np.sqrt(2)) * (E_J2 * E_Jc / (E_C2 * E_Cc))**(1/4) * (1-(1/8)*(x
 g_12 = ((E_12 / np.sqrt(2)) * (E_J1 * E_J2 / (E_C1 * E_C2))**(1/4) * (1-(1/8)*(xi_1+xi_2))) / h
 
 # 本征频率(Hz)
-freq_1 = cap_ind_to_freq(cap=cap_q, ind_junc=ind_junc_q)
+freq_1 = cap_ind_to_freq(cap=cap_q + cap_gq/2, ind_junc=ind_junc_q)
 freq_2 = freq_1
-freq_c = cap_ind_to_freq(cap=cap_c, ind_junc=ind_junc_c)
+freq_c = cap_ind_to_freq(cap=cap_c + cap_gc/2, ind_junc=ind_junc_c)
 
 # qubit 与 coupler 差频
 delta_1 = freq_c - freq_1
@@ -111,5 +111,6 @@ print('耦合强度: ')
 print('g_1c: ', g_1c * 1e-6, 'MHz')
 print('g_2c: ', g_2c * 1e-6, 'MHz')
 print('g_eff: ', g_eff * 1e-6, 'MHz')
+print('g_12: ', g_12 * 1e-6, 'MHz')
 print('g: ', g * 1e-6, 'MHz')
 print('-' * 100)

@@ -83,6 +83,24 @@ def coup_cap_to_strength(cap1, cap2, ind_junc1, ind_junc2, coup_cap):
     return coup_strength
 
 
+def anharm(cap):
+    """
+    利用电容计算非谐性
+
+    :param cap: 电容(F)
+
+    :return: 非谐性(Hz)
+    """
+
+    # 普朗克常数
+    h = hbar / (2 * np.pi)
+
+    # 非谐性
+    anharmonicity = e**2 / (cap * 2) / h
+
+    return anharmonicity
+
+
 if __name__ == '__main__':
     # 自电容
     cap_q1 = 70e-15
@@ -101,4 +119,4 @@ if __name__ == '__main__':
 
     # 本征频率
     freq1 = cap_ind_to_freq(cap=cap_q1, ind_junc=ind_junc_q1)
-    print(freq1*1e-9, 'GHz')
+    print(freq1 * 1e-9, 'GHz')

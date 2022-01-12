@@ -63,7 +63,7 @@
     * 0 的个数相同的态定义在同一个纬度的等分节点上（例如：$\left | 001 \right \rangle, \, \left | 010 \right \rangle , \, \left |100 \right \rangle$​）
     * 从北极开始到南极之间的每一个纬度，量子态中 1 的个数逐渐增加，直到南极为 $\left | 111 \right \rangle$
     * 球面上的点的颜色代表该量子态的相位
-![q-sphere](./img/q-sphere.png)
+![q-sphere](img/q-sphere.png)
 <span style='text-align:center; display: block'>Fig. 1. Diagram of Q-Sphere</span>
 
 * ZZ gate 的实现
@@ -131,12 +131,12 @@
 
 ## 物理系统：参量驱动非线性谐振腔（parametrically driven nonlinear oscillator）
 ### Kerr nonlinear resonator (KNR)
-![KNR](./img/KNR.jpg)
+![KNR](Biased preserving cat qubit/img/KNR.jpg)
 <span style='text-align:center; display: block'>Fig. 2. Scheme of the nonlinear resonator</span>
 如 Fig. 2 所示，非线性谐振腔是在一段 $\lambda/2$ 波导谐振腔中插入一个非线性的约瑟夫森结所构成的，波导腔与传输线以 $C_c$ 电容耦合，用作信号读取（读取反射信号 $out$），阻抗匹配为 $50\Omega$（保证没有杂波）。
 
 ### 等效电路模型
-![equiCircuit](./img/equivalent_circuit.jpg)
+![equiCircuit](Biased preserving cat qubit/img/equivalent_circuit.jpg)
 <span style='text-align:center; display: block'>Fig. 3. Equivalent circuit of the nonlinear resonator</span>
 将 Fig. 2 转化为如 Fig. 3 所示的等效电路模型，求解系统哈密顿量
 

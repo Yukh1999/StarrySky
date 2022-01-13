@@ -59,7 +59,7 @@ if __name__ == '__main__':
     # 总时间
     T = 18 * 2
     sigma = T / 6
-    steps = 4 * int(np.ceil(T))  # ceil 取大于输入的最小整数
+    steps = 4 * int(np.ceil(T))  # 时间切片的个数，ceil 取大于输入的最小整数
     # 时间切片
     tlist = np.linspace(0, T, steps)
 

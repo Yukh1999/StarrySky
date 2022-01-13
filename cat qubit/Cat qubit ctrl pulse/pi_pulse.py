@@ -6,6 +6,10 @@ from matplotlib import pyplot as plt
 def amp(_sigma):
     """
     求解脉冲振幅
+
+    :param _sigma: sigma
+
+    :return: 脉冲振幅
     """
     # Blackman pulse 积分前面的系数
     const = 1.56246130414  # 让积分为 pi

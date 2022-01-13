@@ -43,5 +43,3 @@ plt.subplot(122)
 plt.contourf(vec, vec, W1, 100, cmap=plt.get_cmap('bwr'))
 
 plt.show()
-
-

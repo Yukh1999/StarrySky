@@ -1,4 +1,4 @@
-from qutip import coherent, Qobj, sigmaz, qeye, basis
+from qutip import coherent, Qobj, sigmaz, qeye, basis, destroy
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -13,7 +13,7 @@ def amp(_sigma):
     """
     # Blackman pulse 积分前面的系数
     const = 1.56246130414  # 让积分为 pi
-    _amp = const / (np.sqrt(2 * np.pi) * np.max(_sigma, 3))
+    _amp = const / (np.sqrt(2 * np.pi) * max(_sigma, 3))
 
     return _amp
 
@@ -52,7 +52,35 @@ def pauli_oper(_dim):
     return [_pauli_i, _pauli_x, _pauli_y, _pauli_z]
 
 
+def hamiltonian(_dim, _kerr, _omega, _amp):
+    """
+    生成哈密顿量(Rotating Frame)
+
+    :param _dim: 维度
+    :param _kerr: self-kerr系数 (非谐性)，单位 GHz
+    :param _omega: 本征频率, 单位 GHz
+    :param _amp: 驱动振幅
+
+    :return: 哈密顿量
+    """
+    # 湮灭和创生算符
+    a = destroy(_dim)
+    a_dag = a.dag()
+
+    # drift 项
+    ham_d = (_kerr / 2) * (a_dag ** 2 * a ** 2)
+    # 驱动项
+    ham_dr = _amp * (a + a_dag) + 1j * _amp * (a - a_dag)
+
+    _ham = ham_d + ham_dr
+
+    return _ham
+
+
 if __name__ == '__main__':
+    """
+    所有系数定义均以 GHZ 为单位
+    """
     # 维度
     dim = 3
 
@@ -67,4 +95,9 @@ if __name__ == '__main__':
     # 时间切片
     tlist = np.linspace(0, T, steps)
 
+    # 生成哈密顿量
+    kerr_q = -2 * np.pi * 297e-3  # qubit 的非谐性
+    omega_q = 6.2815 * 2 * np.pi  # qubit 本征频率
+    amp_01 = 1  # 驱动振幅
 
+    ham = hamiltonian(_dim=dim, _kerr=kerr_q, _omega=omega_q, _amp=amp_01)

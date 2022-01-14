@@ -67,9 +67,9 @@ def hamiltonian(_dim, _kerr, _omega, _amp):
     a = destroy(_dim)
     a_dag = a.dag()
 
-    # drift 项
+    # Drift term
     ham_d = (_kerr / 2) * (a_dag ** 2 * a ** 2)
-    # 驱动项
+    # Driving term
     ham_dr = _amp * (a + a_dag) + 1j * _amp * (a - a_dag)
 
     _ham = ham_d + ham_dr
@@ -96,8 +96,9 @@ if __name__ == '__main__':
     tlist = np.linspace(0, T, steps)
 
     # 生成哈密顿量
+    # 定义相关常数
     kerr_q = -2 * np.pi * 297e-3  # qubit 的非谐性
     omega_q = 6.2815 * 2 * np.pi  # qubit 本征频率
     amp_01 = 1  # 驱动振幅
-
+    # 哈密顿量
     ham = hamiltonian(_dim=dim, _kerr=kerr_q, _omega=omega_q, _amp=amp_01)

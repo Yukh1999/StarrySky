@@ -45,7 +45,7 @@ def pauli_oper(_dim):
     :return: 子空间 pauli 算符 [I, X, Y, Z]
     """
     _pauli_i = qeye(_dim)
-    _pauli_x = proj(basis(_dim, 0), basis(_dim, 1)) - proj(basis(_dim, 1), basis(_dim, 0))
+    _pauli_x = proj(basis(_dim, 0), basis(_dim, 1)) + proj(basis(_dim, 1), basis(_dim, 0))
     _pauli_y = 1j * (proj(basis(_dim, 1), basis(_dim, 0)) - proj(basis(_dim, 0), basis(_dim, 1)))
     _pauli_z = proj(basis(_dim, 0)) - proj(basis(_dim, 1))
 

@@ -1,6 +1,17 @@
 import matplotlib.pyplot as plt
 from qutip import destroy, qeye, tensor
 import numpy as np
+from FloatQ_FloatC_Symmetry import freq_coupling
+
+
+def get_n_float(f_str, n):
+    """
+    保留小数点后 n 位，不进行四舍五入
+    """
+    f_str = str(f_str)  # f_str = '{}'.format(f_str) 也可以转换为字符串
+    x, y, z = f_str.partition('.')
+    z = (z + "0" * n)[:n]  # 如论传入的函数有几位小数，在字符串后面都添加n为小数0
+    return ".".join([x, z])
 
 
 def plot_energies(_energies_open, _energies_close):
@@ -10,28 +21,84 @@ def plot_energies(_energies_open, _energies_close):
     :param _energies_open: 耦合打开的能级
     :param _energies_close: 耦合关闭的能级
     """
-    plt.figure(figsize=(13, 8), dpi=80)
+    plt.figure(figsize=(13, 5), dpi=80)
 
     plt.subplot(121)
     for index, _energy in enumerate(_energies_open):
-        if index == 2 or index == 3:
-            color = 'red'
-        else:
-            color = 'blue'
+        color = 'red'
         plt.axhline(y=_energy, color=color)
+        plt.ylim([7500, 7600])
         plt.ylabel('Energy(MHz)')
         plt.title('Coupling Opening')
 
     plt.subplot(122)
     for index, _energy in enumerate(_energies_close):
-        if index == 2 or index == 3:
-            color = 'red'
-        else:
-            color = 'blue'
+        color = 'blue'
         plt.axhline(y=_energy, color=color)
+        plt.ylim([7500, 7600])
         plt.ylabel('Energy(MHz)')
         plt.title('Coupling Closing')
 
+    plt.show()
+
+
+def plot_freq_c(_ind_junc, freq_c):
+    """
+    绘制 coupler 频率随 coupler Lj 的变化
+    :param _ind_junc: [list]不同Lj
+    :param freq_c: [list]不同 Lj 下的 coupler 频率
+    """
+    plt.figure(figsize=(8, 5), dpi=80)
+    plt.plot(_ind_junc, freq_c, label='Freq_coupler')
+    plt.legend()
+    plt.xlabel(r'$L_j(nH)$')
+    plt.ylabel('Freq(GHz)')
+    plt.show()
+
+
+def plot_coupling_energy(_ind_junc, _energies):
+    """
+    绘制耦合强度和本征能量随 coupler Lj 的变化
+    """
+    plt.figure(figsize=(7, 10), dpi=80)
+    energy_symmetric = []
+    energy_asymmetric = []
+    # print(_energies)
+    for _energy in _energies:
+        for energy_ in _energy:
+            if get_n_float(energy_, 8) == '7567.54770353':
+                energy_symmetric.append(energy_)
+            else:
+                energy_asymmetric.append(energy_)
+
+    # 变为 ndarray，可以直接相减
+    energy_symmetric = np.array(energy_symmetric)
+    energy_asymmetric = np.array(energy_asymmetric)
+
+    plt.subplot(211)
+    # plt.plot(_ind_junc, energy_symmetric, label='Symmetric')
+    plt.axhline(y=7567.54770353, label='Symmetric', color='orange')
+    plt.plot(_ind_junc, energy_asymmetric, label='Asymmetric', linestyle='--')
+    plt.xlabel('$L_j(nH)$')
+    plt.ylabel('Energy(MHz)')
+    plt.legend()
+    plt.xlim([3.5, 15])
+
+    step_length = (15 - 3.5) / 100
+    n = int(np.ceil((4.28905 - 3.5) / step_length))
+
+    plt.fill_between(x=ind_junc_c_ls[n:], y1=energy_symmetric[n:], y2=energy_asymmetric[n:],
+                     facecolor='yellow', alpha=0.2)
+    plt.fill_between(x=ind_junc_c_ls[0:n+1], y1=energy_symmetric[0:n+1], y2=energy_asymmetric[0:n+1],
+                     facecolor='green', alpha=0.2)
+
+    plt.subplot(212)
+    coupling = (energy_asymmetric - energy_symmetric) / 2
+    plt.plot(_ind_junc, coupling, label='Coupling Strength')
+    plt.xlabel('$L_j(nH)$')
+    plt.ylabel('Coupling Strength(MHz)')
+
+    plt.legend()
     plt.show()
 
 
@@ -88,6 +155,28 @@ def hamiltonian(freq_c, g_1c, g_2c, g_12):
     return ham
 
 
+# 求解不同coupler电感下的能级(MHz)
+eigen_energies = []
+freq_c_ls = []
+ind_junc_c_ls = np.linspace(3.5, 15, 100)
+for ind_junc in ind_junc_c_ls:
+    res = freq_coupling(ind_junc_c=ind_junc * 1e-9)  # 电感从 nH 转化为 H
+    _freq_c = res['freq'][2] * 1e-6
+    couplings = res['coupling']
+
+    # 单位为 MHz，需要乘1e-6
+    _ham = hamiltonian(freq_c=_freq_c, g_1c=couplings[0] * 1e-6, g_2c=couplings[1] * 1e-6, g_12=couplings[3] * 1e-6)
+    energies = _ham.eigenenergies()
+
+    freq_c_ls.append(_freq_c)
+    eigen_energies.append([energies[2], energies[3]])
+
+# 绘制Freq_c随Lj变化图
+plot_freq_c(_ind_junc=ind_junc_c_ls, freq_c=freq_c_ls)
+
+# 绘制能级随Lj变化图
+plot_coupling_energy(_ind_junc=ind_junc_c_ls, _energies=eigen_energies)
+
 # 哈密顿量
 ham_open = hamiltonian(freq_c=freq_c_open, g_1c=g_1c_open, g_2c=g_2c_open, g_12=g_12_open)
 ham_close = hamiltonian(freq_c=freq_c_close, g_1c=g_1c_close, g_2c=g_2c_close, g_12=g_12_close)
@@ -101,17 +190,15 @@ g_open = energies_open[3] - energies_open[2]
 g_close = energies_close[3] - energies_close[2]
 
 # 输出结果
-# print('-' * 100)
-# print('能谱')
-# print(energies)
-#
+print('-' * 100)
+print('能谱')
+print('energies_open: ', energies_open)
+print('energies_close: ', energies_close)
+# 能级差
 print('-' * 100)
 print('能级差')
 print('g_open: ', g_open / 2)
 print('g_close: ', g_close / 2)
 
-
 # 绘制能级图
 plot_energies(_energies_open=energies_open[2:4], _energies_close=energies_close[2:4])
-
-

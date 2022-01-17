@@ -124,22 +124,22 @@ def freq_coupling(ind_junc_c):
     g = g_12 - g_eff
 
     # 输出数据
-    print('-' * 100)
-    print('本征频率:')
-    print('Qubit1_freq: ', freq_q1_ * 1e-9, 'GHz')
-    print('Qubit2_freq: ', freq_q2_ * 1e-9, 'GHz')
-    print('Coupler_freq: ', freq_c_ * 1e-9, 'GHz')
-    print('-'*100)
-    print('Qubit非谐性: ', (E_C1/h) * 1e-6, 'MHz')
-    print('Coupler非谐性: ', (E_Cc/h) * 1e-6, 'MHz')
-    print('-' * 100)
-    print('耦合强度: ')
-    print('g_1c: ', g_1c * 1e-6, 'MHz')
-    print('g_2c: ', g_2c * 1e-6, 'MHz')
-    print('g_eff: ', g_eff * 1e-6, 'MHz')
-    print('g_12: ', g_12 * 1e-6, 'MHz')
-    print('g: ', g * 1e-6, 'MHz')
-    print('-' * 100)
+    # print('-' * 100)
+    # print('本征频率:')
+    # print('Qubit1_freq: ', freq_q1_ * 1e-9, 'GHz')
+    # print('Qubit2_freq: ', freq_q2_ * 1e-9, 'GHz')
+    # print('Coupler_freq: ', freq_c_ * 1e-9, 'GHz')
+    # print('-'*100)
+    # print('Qubit非谐性: ', (E_C1/h) * 1e-6, 'MHz')
+    # print('Coupler非谐性: ', (E_Cc/h) * 1e-6, 'MHz')
+    # print('-' * 100)
+    # print('耦合强度: ')
+    # print('g_1c: ', g_1c * 1e-6, 'MHz')
+    # print('g_2c: ', g_2c * 1e-6, 'MHz')
+    # print('g_eff: ', g_eff * 1e-6, 'MHz')
+    # print('g_12: ', g_12 * 1e-6, 'MHz')
+    # print('g: ', g * 1e-6, 'MHz')
+    # print('-' * 100)
 
     res = {
         'freq': [freq_q1_, freq_q2_, freq_c_],
@@ -209,7 +209,9 @@ coupling_list = []
 # # 绘图
 # plot_detuning_coupling(ind_junc_c_list, detuning_list, coupling_list)
 
-freq_coupling(ind_junc_c=4.28905e-9)
+if __name__ == '__main__':
+
+    freq_coupling(ind_junc_c=4.28905e-9)
 
 # 输出数据
 # print('-' * 100)

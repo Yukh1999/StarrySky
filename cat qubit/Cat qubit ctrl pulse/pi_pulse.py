@@ -3,6 +3,46 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
+class Wave(object):
+    """
+    产生波形
+    """
+
+    def __init__(self):
+        # 默认波形: 20ns 脉冲为0的方波
+        self.wave_form = None
+        self.square_wave(t_start=0, t_stop=20, _amp=0)
+
+    def square_wave(self, t_start, t_stop, _amp):
+        """
+        产生方波
+
+        :param t_start: 脉冲开始时刻
+        :param t_stop: 脉冲结束时刻
+        :param _amp: 脉冲振幅
+        """
+        # 时间切片的个数，ceil 取大于输入的最小整数
+        steps = 4 * int(np.ceil(T))
+        # 时间切片
+        tlist = np.linspace(t_start, t_stop, steps)
+
+        wave_form = np.array([_amp for t in tlist])
+
+        self.wave_form = wave_form
+
+    @staticmethod
+    def blackman(t_start, t_stop, _amp):
+        """
+        产生 blackman 波形
+
+        :param t_start: 脉冲开始时刻
+        :param t_stop: 脉冲结束时刻
+        :param _amp: 脉冲振幅
+        """
+        pass
+
+
+
 def amp(_sigma):
     """
     求解脉冲振幅
@@ -91,9 +131,9 @@ if __name__ == '__main__':
     # 总时间
     T = 18 * 2
     sigma = T / 6
-    steps = 4 * int(np.ceil(T))  # 时间切片的个数，ceil 取大于输入的最小整数
+    # steps = 4 * int(np.ceil(T))  # 时间切片的个数，ceil 取大于输入的最小整数
     # 时间切片
-    tlist = np.linspace(0, T, steps)
+    # tlist = np.linspace(0, T, steps)
 
     # 生成哈密顿量
     # 定义相关常数

@@ -123,20 +123,23 @@ def freq_coupling(ind_junc_c):
     # qubit 之间总耦合强度
     g = g_12 - g_eff
 
-    # # 输出数据
-    # print('-' * 100)
-    # print('本征频率:')
-    # print('Qubit1_freq: ', freq_q1_ * 1e-9, 'GHz')
-    # print('Qubit2_freq: ', freq_q2_ * 1e-9, 'GHz')
-    # print('Coupler_freq: ', freq_c_ * 1e-9, 'GHz')
-    # print('-' * 100)
-    # print('耦合强度: ')
-    # print('g_1c: ', g_1c * 1e-6, 'MHz')
-    # print('g_2c: ', g_2c * 1e-6, 'MHz')
-    # print('g_eff: ', g_eff * 1e-6, 'MHz')
-    # print('g_12: ', g_12 * 1e-6, 'MHz')
-    # print('g: ', g * 1e-6, 'MHz')
-    # print('-' * 100)
+    # 输出数据
+    print('-' * 100)
+    print('本征频率:')
+    print('Qubit1_freq: ', freq_q1_ * 1e-9, 'GHz')
+    print('Qubit2_freq: ', freq_q2_ * 1e-9, 'GHz')
+    print('Coupler_freq: ', freq_c_ * 1e-9, 'GHz')
+    print('-'*100)
+    print('Qubit非谐性: ', (E_C1/h) * 1e-6, 'MHz')
+    print('Coupler非谐性: ', (E_Cc/h) * 1e-6, 'MHz')
+    print('-' * 100)
+    print('耦合强度: ')
+    print('g_1c: ', g_1c * 1e-6, 'MHz')
+    print('g_2c: ', g_2c * 1e-6, 'MHz')
+    print('g_eff: ', g_eff * 1e-6, 'MHz')
+    print('g_12: ', g_12 * 1e-6, 'MHz')
+    print('g: ', g * 1e-6, 'MHz')
+    print('-' * 100)
 
     res = {
         'freq': [freq_q1_, freq_q2_, freq_c_],
@@ -153,23 +156,38 @@ def plot_detuning_coupling(ind_junc_c, detuning, coupling):
     :param detuning: qubit和 coupler的失谐(freq_c - freq_q)
     :param coupling: 总耦合强度
     """
-    fig = plt.figure(figsize=(16, 10), dpi=80)
+    fig = plt.figure(figsize=(16, 13), dpi=80)
 
-    # 第姨条曲线
+    # 第一条曲线
     ax1 = fig.add_subplot(111)
-    ax1.plot(ind_junc_c, coupling, label='Coupling', color='r')
-    ax1.axhline(y=0, linestyle='--', color='purple')
-    ax1.set_ylabel('Coupling(MHz)', fontsize=15)
-    ax1.set_xlabel(r'$L_J$(nH)', fontsize=15)
+    ax1.plot(ind_junc_c, coupling, label='Coupling', color='r', linewidth=3)
+    # 标定0耦合水平线
+    ax1.axhline(y=0, linestyle='--', color='purple', linewidth=3)
+    ax1.set_ylabel('Coupling(MHz)', fontsize=20)
+    ax1.set_xlabel(r'$L_J$(nH)', fontsize=20)
 
     # 第二条曲线
     ax2 = ax1.twinx()
-    ax2.plot(ind_junc_c, detuning, label='Detuning')
-    ax2.set_ylabel('Detuning(MHz)', fontsize=15)
+    ax2.plot(ind_junc_c, detuning, label='Detuning', linewidth=3)
+    ax2.set_ylabel('Detuning(MHz)', fontsize=20)
 
-    ax2.axvline(x=4.28905, linestyle='--', color='purple')
+    # 标定0耦合垂直线
+    ax2.axvline(x=4.28905, linestyle='--', color='purple', linewidth=3)
 
-    fig.legend(loc=1, bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxes, fontsize=15)
+    plt.setp(ax1.get_xticklabels(), size=20)
+    plt.setp(ax1.get_yticklabels(), size=20)
+    plt.setp(ax2.get_yticklabels(), size=20)
+
+    bwith=3
+    ax1.spines['bottom'].set_linewidth(bwith)
+    ax1.spines['left'].set_linewidth(bwith)
+    ax1.spines['top'].set_linewidth(bwith)
+    ax1.spines['right'].set_linewidth(bwith)
+
+    ax1.tick_params(which='major', width=3)
+    ax2.tick_params(which='major', width=3)
+
+    fig.legend(loc=1, bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxes, fontsize=20)
     plt.show()
 
 
@@ -179,19 +197,19 @@ ind_junc_c_list = np.linspace(3.5, 15, 100)
 detuning_list = []
 coupling_list = []
 
-for _ind_junc_c in ind_junc_c_list:
-    res = freq_coupling(ind_junc_c=_ind_junc_c * 1e-9)
-    freq = res['freq']
-    coupling = res['coupling'][4] * 1e-6
-    detuning = (freq[2] - freq[0]) * 1e-6
+# for _ind_junc_c in ind_junc_c_list:
+#     res = freq_coupling(ind_junc_c=_ind_junc_c * 1e-9)
+#     freq = res['freq']
+#     coupling = res['coupling'][4] * 1e-6
+#     detuning = (freq[2] - freq[0]) * 1e-6
+#
+#     detuning_list.append(detuning)
+#     coupling_list.append(coupling)
+#
+# # 绘图
+# plot_detuning_coupling(ind_junc_c_list, detuning_list, coupling_list)
 
-    detuning_list.append(detuning)
-    coupling_list.append(coupling)
-
-# 绘图
-plot_detuning_coupling(ind_junc_c_list, detuning_list, coupling_list)
-
-# freq_coupling(ind_junc_c=4.36e-9)
+freq_coupling(ind_junc_c=4.28905e-9)
 
 # 输出数据
 # print('-' * 100)

@@ -33,7 +33,7 @@ class Wave(object):
     @staticmethod
     def blackman(t_start, t_stop, _amp):
         """
-        产生 blackman 波形
+        产生 blackman 脉冲
 
         :param t_start: 脉冲开始时刻
         :param t_stop: 脉冲结束时刻

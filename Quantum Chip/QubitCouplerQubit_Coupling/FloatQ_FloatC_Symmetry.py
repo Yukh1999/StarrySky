@@ -124,22 +124,22 @@ def freq_coupling(ind_junc_c):
     g = g_12 - g_eff
 
     # 输出数据
-    # print('-' * 100)
-    # print('本征频率:')
-    # print('Qubit1_freq: ', freq_q1_ * 1e-9, 'GHz')
-    # print('Qubit2_freq: ', freq_q2_ * 1e-9, 'GHz')
-    # print('Coupler_freq: ', freq_c_ * 1e-9, 'GHz')
-    # print('-'*100)
-    # print('Qubit非谐性: ', (E_C1/h) * 1e-6, 'MHz')
-    # print('Coupler非谐性: ', (E_Cc/h) * 1e-6, 'MHz')
-    # print('-' * 100)
-    # print('耦合强度: ')
-    # print('g_1c: ', g_1c * 1e-6, 'MHz')
-    # print('g_2c: ', g_2c * 1e-6, 'MHz')
-    # print('g_eff: ', g_eff * 1e-6, 'MHz')
-    # print('g_12: ', g_12 * 1e-6, 'MHz')
-    # print('g: ', g * 1e-6, 'MHz')
-    # print('-' * 100)
+    print('-' * 100)
+    print('本征频率:')
+    print('Qubit1_freq: ', freq_q1_ * 1e-9, 'GHz')
+    print('Qubit2_freq: ', freq_q2_ * 1e-9, 'GHz')
+    print('Coupler_freq: ', freq_c_ * 1e-9, 'GHz')
+    print('-' * 100)
+    print('Qubit非谐性: ', (E_C1 / h) * 1e-6, 'MHz')
+    print('Coupler非谐性: ', (E_Cc / h) * 1e-6, 'MHz')
+    print('-' * 100)
+    print('耦合强度: ')
+    print('g_1c: ', g_1c * 1e-6, 'MHz')
+    print('g_2c: ', g_2c * 1e-6, 'MHz')
+    print('g_eff: ', g_eff * 1e-6, 'MHz')
+    print('g_12: ', g_12 * 1e-6, 'MHz')
+    print('g: ', g * 1e-6, 'MHz')
+    print('-' * 100)
 
     res = {
         'freq': [freq_q1_, freq_q2_, freq_c_],
@@ -178,7 +178,7 @@ def plot_detuning_coupling(ind_junc_c, detuning, coupling):
     plt.setp(ax1.get_yticklabels(), size=20)
     plt.setp(ax2.get_yticklabels(), size=20)
 
-    bwith=3
+    bwith = 3
     ax1.spines['bottom'].set_linewidth(bwith)
     ax1.spines['left'].set_linewidth(bwith)
     ax1.spines['top'].set_linewidth(bwith)
@@ -188,6 +188,26 @@ def plot_detuning_coupling(ind_junc_c, detuning, coupling):
     ax2.tick_params(which='major', width=3)
 
     fig.legend(loc=1, bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxes, fontsize=20)
+    plt.show()
+
+
+def plot_coupling_qc(coupler_freq, coupling_1c, coupling_2c):
+    """
+    绘制 g_1c, g_2c 随 coupler 频率的变化
+
+    :param coupler_freq: coupler的频率列表
+    :param coupling_1c: g_1c
+    :param coupling_2c: g_2c
+    """
+    # 绘图
+    plt.figure(figsize=(10, 6), dpi=80)
+
+    plt.plot(coupler_freq, coupling_1c, label='$g_{qc}$')
+    plt.xlabel('Freq_coupler (GHz)', fontsize=15)
+    plt.ylabel('$g_{qc}$(MHz)', fontsize=15)
+
+    plt.legend(fontsize='20')
+
     plt.show()
 
 
@@ -210,8 +230,17 @@ coupling_list = []
 # plot_detuning_coupling(ind_junc_c_list, detuning_list, coupling_list)
 
 if __name__ == '__main__':
+    coupler_freq_ls = []
+    coupling_1c_ls = []
+    coupling_2c_ls = []
+    for ind_junc_c in ind_junc_c_list:
+        res = freq_coupling(ind_junc_c=ind_junc_c * 1e-9)
+        coupler_freq_ls.append(res['freq'][2] * 1e-9)
+        coupling_1c_ls.append(res['coupling'][0] * 1e-6)
+        coupling_2c_ls.append(res['coupling'][1] * 1e-6)
 
-    freq_coupling(ind_junc_c=4.28905e-9)
+    plot_coupling_qc(coupler_freq_ls, coupling_1c_ls, coupling_2c_ls)
+
 
 # 输出数据
 # print('-' * 100)

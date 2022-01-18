@@ -27,7 +27,7 @@ def plot_energies(_energies_open, _energies_close):
     for index, _energy in enumerate(_energies_open):
         color = 'red'
         plt.axhline(y=_energy, color=color)
-        plt.ylim([7500, 7600])
+        plt.ylim([7400, 7700])
         plt.ylabel('Energy(MHz)')
         plt.title('Coupling Opening')
 
@@ -35,7 +35,7 @@ def plot_energies(_energies_open, _energies_close):
     for index, _energy in enumerate(_energies_close):
         color = 'blue'
         plt.axhline(y=_energy, color=color)
-        plt.ylim([7500, 7600])
+        plt.ylim([7400, 7700])
         plt.ylabel('Energy(MHz)')
         plt.title('Coupling Closing')
 
@@ -52,7 +52,7 @@ def plot_freq_c(_ind_junc, freq_c):
     plt.plot(_ind_junc, freq_c, label='Freq_coupler')
     plt.legend()
     plt.xlabel(r'$L_j(nH)$')
-    plt.ylabel('Freq(GHz)')
+    plt.ylabel('Freq(MHz)')
     plt.show()
 
 

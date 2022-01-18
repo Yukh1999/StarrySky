@@ -187,7 +187,7 @@ def plot_detuning_coupling(ind_junc_c, detuning, coupling):
     ax1.tick_params(which='major', width=3)
     ax2.tick_params(which='major', width=3)
 
-    fig.legend(loc=1, bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxes, fontsize=20)
+    fig.legend(loc=1, bbox_to_anchor=(0.5, 1), bbox_transform=ax1.transAxes, fontsize=20)
     plt.show()
 
 
@@ -217,16 +217,16 @@ ind_junc_c_list = np.linspace(3.5, 15, 100)
 detuning_list = []
 coupling_list = []
 
-# for _ind_junc_c in ind_junc_c_list:
-#     res = freq_coupling(ind_junc_c=_ind_junc_c * 1e-9)
-#     freq = res['freq']
-#     coupling = res['coupling'][4] * 1e-6
-#     detuning = (freq[2] - freq[0]) * 1e-6
-#
-#     detuning_list.append(detuning)
-#     coupling_list.append(coupling)
-#
-# # 绘图
+for _ind_junc_c in ind_junc_c_list:
+    res = freq_coupling(ind_junc_c=_ind_junc_c * 1e-9)
+    freq = res['freq']
+    coupling = res['coupling'][4] * 1e-6
+    detuning = (freq[0] - freq[2]) * 1e-6
+
+    detuning_list.append(detuning)
+    coupling_list.append(coupling)
+
+# 绘图
 # plot_detuning_coupling(ind_junc_c_list, detuning_list, coupling_list)
 
 if __name__ == '__main__':
@@ -239,9 +239,9 @@ if __name__ == '__main__':
         coupling_1c_ls.append(res['coupling'][0] * 1e-6)
         coupling_2c_ls.append(res['coupling'][1] * 1e-6)
 
-    plot_coupling_qc(coupler_freq_ls, coupling_1c_ls, coupling_2c_ls)
+    # plot_coupling_qc(coupler_freq_ls, coupling_1c_ls, coupling_2c_ls)
 
-
+    freq_coupling(ind_junc_c=4.37e-9)
 # 输出数据
 # print('-' * 100)
 # print('本征频率:')

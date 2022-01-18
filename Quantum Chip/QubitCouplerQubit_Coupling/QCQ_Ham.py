@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from qutip import destroy, qeye, tensor
 import numpy as np
 from FloatQ_FloatC_Symmetry import freq_coupling
+from scipy.optimize import root
 
 
 def get_n_float(f_str, n):
@@ -27,17 +28,19 @@ def plot_energies(_energies_open, _energies_close):
     for index, _energy in enumerate(_energies_open):
         color = 'red'
         plt.axhline(y=_energy, color=color)
-        plt.ylim([7400, 7700])
+        plt.ylim([7500, 7600])
         plt.ylabel('Energy(MHz)')
         plt.title('Coupling Opening')
+        plt.xticks([])
 
     plt.subplot(122)
     for index, _energy in enumerate(_energies_close):
         color = 'blue'
         plt.axhline(y=_energy, color=color)
-        plt.ylim([7400, 7700])
+        plt.ylim([7500, 7600])
         plt.ylabel('Energy(MHz)')
         plt.title('Coupling Closing')
+        plt.xticks([])
 
     plt.show()
 
@@ -77,8 +80,8 @@ def plot_coupling_energy(_ind_junc, _energies):
 
     plt.subplot(211)
     # plt.plot(_ind_junc, energy_symmetric, label='Symmetric')
-    plt.axhline(y=7567.54770353, label='Symmetric', color='orange')
-    plt.plot(_ind_junc, energy_asymmetric, label='Asymmetric', linestyle='--')
+    plt.axhline(y=7567.54770353, label=r'$|01\rangle + |10\rangle$', color='orange')
+    plt.plot(_ind_junc, energy_asymmetric, label=r'$|01\rangle - |10\rangle$', linestyle='--')
     plt.xlabel('$L_j(nH)$')
     plt.ylabel('Energy(MHz)')
     plt.legend()
@@ -89,17 +92,41 @@ def plot_coupling_energy(_ind_junc, _energies):
 
     plt.fill_between(x=ind_junc_c_ls[n:], y1=energy_symmetric[n:], y2=energy_asymmetric[n:],
                      facecolor='yellow', alpha=0.2)
-    plt.fill_between(x=ind_junc_c_ls[0:n+1], y1=energy_symmetric[0:n+1], y2=energy_asymmetric[0:n+1],
+    plt.fill_between(x=ind_junc_c_ls[0:n + 1], y1=energy_symmetric[0:n + 1], y2=energy_asymmetric[0:n + 1],
                      facecolor='green', alpha=0.2)
 
     plt.subplot(212)
     coupling = (energy_asymmetric - energy_symmetric) / 2
     plt.plot(_ind_junc, coupling, label='Coupling Strength')
+    plt.axhline(y=0, color='purple', linestyle='--')
+    plt.axvline(x=4.37, color='purple', linestyle='--')
     plt.xlabel('$L_j(nH)$')
     plt.ylabel('Coupling Strength(MHz)')
 
     plt.legend()
     plt.show()
+
+
+def zero_point(ind_junc_c):
+    """
+    寻找耦合为0的点
+    """
+
+    def coupling(Lj):
+        res_ = freq_coupling(ind_junc_c=Lj * 1e-9)
+        freq_c_ = res_['freq'][2] * 1e-6
+        couplings_ = res_['coupling']
+
+        # 单位为 MHz，需要乘1e-6
+        ham_ = hamiltonian(freq_c=freq_c_, g_1c=couplings_[0] * 1e-6,
+                           g_2c=couplings_[1] * 1e-6, g_12=couplings_[3] * 1e-6)
+        energies_ = ham_.eigenenergies()
+
+        coupling_ = energies_[3] - eigen_energies[2]
+
+        return coupling_
+
+    return root(fun=coupling, x0=ind_junc_c)
 
 
 # 维度
@@ -136,10 +163,10 @@ g_2c_open = -94.74232984091866
 g_12_open = -12.60634692464393
 
 # 关闭耦合
-freq_c_close = 6.39914575114707e3
+freq_c_close = 6.338236983066189e3
 # 耦合常数
-g_1c_close = -126.04019856521623
-g_2c_close = -126.04019856521623
+g_1c_close = -125.4393897364878
+g_2c_close = -125.4393897364878
 g_12_close = -12.60634692464393
 
 
@@ -154,6 +181,9 @@ def hamiltonian(freq_c, g_1c, g_2c, g_12):
 
     return ham
 
+
+# 零点
+# zero = zero_point(4.3)
 
 # 求解不同coupler电感下的能级(MHz)
 eigen_energies = []
@@ -190,15 +220,15 @@ g_open = energies_open[3] - energies_open[2]
 g_close = energies_close[3] - energies_close[2]
 
 # 输出结果
-print('-' * 100)
-print('能谱')
-print('energies_open: ', energies_open)
-print('energies_close: ', energies_close)
-# 能级差
-print('-' * 100)
-print('能级差')
-print('g_open: ', g_open / 2)
-print('g_close: ', g_close / 2)
+# print('-' * 100)
+# print('能谱')
+# print('energies_open: ', energies_open)
+# print('energies_close: ', energies_close)
+# # 能级差
+# print('-' * 100)
+# print('能级差')
+# print('g_open: ', g_open / 2)
+# print('g_close: ', g_close / 2)
 
 # 绘制能级图
 plot_energies(_energies_open=energies_open[2:4], _energies_close=energies_close[2:4])

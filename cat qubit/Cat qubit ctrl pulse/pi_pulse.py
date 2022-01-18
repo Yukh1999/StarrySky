@@ -1,6 +1,7 @@
 from qutip import coherent, Qobj, sigmaz, qeye, basis, destroy
 import numpy as np
 from matplotlib import pyplot as plt
+import krotov
 
 
 class Wave(object):
@@ -10,37 +11,71 @@ class Wave(object):
 
     def __init__(self):
         # 默认波形: 20ns 脉冲为0的方波
-        self.wave_form = None
-        self.square_wave(t_start=0, t_stop=20, _amp=0)
+        self.wave_form_ls = []
 
-    def square_wave(self, t_start, t_stop, _amp):
+    def square_wave(self, t_start, t_stop, _amp, name='square'):
         """
         产生方波
 
         :param t_start: 脉冲开始时刻
         :param t_stop: 脉冲结束时刻
         :param _amp: 脉冲振幅
+        :param name: 脉冲命名
         """
         # 时间切片的个数，ceil 取大于输入的最小整数
-        steps = 4 * int(np.ceil(T))
+        steps = 4 * int(np.ceil(t_stop - t_start))
         # 时间切片
         tlist = np.linspace(t_start, t_stop, steps)
 
+        # 生成脉冲波形
         wave_form = np.array([_amp for t in tlist])
 
-        self.wave_form = wave_form
+        self.wave_form_ls.append([tlist, wave_form, name])
 
-    @staticmethod
-    def blackman(t_start, t_stop, _amp):
+    def blackman(self, t_start, t_stop, _sigma, name='blackman'):
         """
         产生 blackman 脉冲
 
         :param t_start: 脉冲开始时刻
         :param t_stop: 脉冲结束时刻
-        :param _amp: 脉冲振幅
+        :param _sigma: 脉冲半高宽
+        :param name: 脉冲命名
         """
-        pass
+        # blackman脉冲振幅
+        _amp = amp(_sigma=_sigma)
 
+        # 时间切片的个数，ceil 取大于输入的最小整数
+        steps = 4 * int(np.ceil(t_stop - t_start))
+        # 时间切片
+        tlist = np.linspace(t_start, t_stop, steps)
+
+        # 生成blackman脉冲波形
+        wave_form = np.array([_amp * krotov.shapes.blackman(t, t_start=t_start, t_stop=t_stop) for t in tlist])
+
+        self.wave_form_ls.append([tlist, wave_form, name])
+
+    def plot_wave(self):
+        """
+        绘制脉冲波形
+        """
+        # 脉冲数量
+        wave_num = len(self.wave_form_ls)
+
+        # 绘图
+        plt.figure(figsize=(15, 4*wave_num), dpi=80)
+        for index, wave_form_info in enumerate(self.wave_form_ls):
+
+            plt.subplot(int(f'{wave_num}1{index+1}'))
+            tlist = wave_form_info[0]
+            wave_form = wave_form_info[1]
+            name = wave_form_info[2]
+
+            plt.plot(tlist, wave_form, label=f'${name}$')
+            plt.legend()
+            plt.ylabel('Pulse Amp')
+
+        plt.xlabel('t')
+        plt.show()
 
 
 def amp(_sigma):
@@ -53,7 +88,7 @@ def amp(_sigma):
     """
     # Blackman pulse 积分前面的系数
     const = 1.56246130414  # 让积分为 pi
-    _amp = const / (np.sqrt(2 * np.pi) * max(_sigma, 3))
+    _amp = const / (np.sqrt(2 * np.pi) * max([_sigma, 3]))
 
     return _amp
 
@@ -124,10 +159,6 @@ if __name__ == '__main__':
     # 维度
     dim = 3
 
-    # 系数计算
-    sigma_max = 3  # 振幅取 max 时，sigma=3
-    amp_max = amp(_sigma=sigma_max)
-
     # 总时间
     T = 18 * 2
     sigma = T / 6
@@ -142,3 +173,9 @@ if __name__ == '__main__':
     amp_01 = 1  # 驱动振幅
     # 哈密顿量
     ham = hamiltonian(_dim=dim, _kerr=kerr_q, _omega=omega_q, _amp=amp_01)
+
+    # 初始脉冲
+    wave = Wave()
+    wave.square_wave(t_start=0, t_stop=T, _amp=0, name='u_1(t)')
+    wave.blackman(t_start=0, t_stop=T, _sigma=sigma, name='u_0(t)')
+    wave.plot_wave()

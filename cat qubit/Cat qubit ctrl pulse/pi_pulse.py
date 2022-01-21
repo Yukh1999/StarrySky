@@ -13,7 +13,7 @@ class Wave(object):
         # 默认波形: 20ns 脉冲为0的方波
         self.wave_form_ls = []
 
-    def square_wave(self, t_start, t_stop, _amp, name='square'):
+    def add_square_wave(self, t_start, t_stop, _amp, name='square'):
         """
         产生方波
 
@@ -32,7 +32,7 @@ class Wave(object):
 
         self.wave_form_ls.append([tlist, wave_form, name])
 
-    def blackman(self, t_start, t_stop, _sigma, name='blackman'):
+    def add_blackman(self, t_start, t_stop, _sigma, name='blackman'):
         """
         产生 blackman 脉冲
 
@@ -145,9 +145,13 @@ def hamiltonian(_dim, _kerr, _omega, _amp):
     # Drift term
     ham_d = (_kerr / 2) * (a_dag ** 2 * a ** 2)
     # Driving term
-    ham_dr = _amp * (a + a_dag) + 1j * _amp * (a - a_dag)
+    ham_dr1 = a + a_dag
+    ham_dr2 = a - a_dag
 
-    _ham = ham_d + ham_dr
+    amp_1 = lambda t, args: _amp
+    amp_2 = lambda t, args: _amp
+
+    _ham = [ham_d, [ham_dr1, amp_1], [ham_dr2, amp_2]]
 
     return _ham
 
@@ -176,6 +180,6 @@ if __name__ == '__main__':
 
     # 初始脉冲
     wave = Wave()
-    wave.square_wave(t_start=0, t_stop=T, _amp=0, name='u_1(t)')
-    wave.blackman(t_start=0, t_stop=T, _sigma=sigma, name='u_0(t)')
+    wave.add_square_wave(t_start=0, t_stop=T, _amp=0, name='u_1(t)')
+    wave.add_blackman(t_start=0, t_stop=T, _sigma=sigma, name='u_0(t)')
     wave.plot_wave()

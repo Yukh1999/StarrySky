@@ -1,76 +1,205 @@
-from qutip import coherent, Qobj, sigmaz, qeye, basis, destroy
+from qutip import coherent, Qobj, sigmaz, qeye, basis, destroy, Options, expect
 import numpy as np
 from matplotlib import pyplot as plt
 import krotov
 
 
-class Wave(object):
+class Pulse(object):
     """
-    产生波形
+    产生脉冲波形
     """
 
-    def __init__(self):
-        # 默认波形: 20ns 脉冲为0的方波
-        self.wave_form_ls = []
-
-    def add_square_wave(self, t_start, t_stop, _amp, name='square'):
+    @staticmethod
+    def square_wave(t, t_start, t_stop, _amp):
         """
         产生方波
 
+        :param t: t时刻
         :param t_start: 脉冲开始时刻
         :param t_stop: 脉冲结束时刻
         :param _amp: 脉冲振幅
-        :param name: 脉冲命名
+
+        :return: t时刻的振幅
         """
-        # 时间切片的个数，ceil 取大于输入的最小整数
-        steps = 4 * int(np.ceil(t_stop - t_start))
-        # 时间切片
-        tlist = np.linspace(t_start, t_stop, steps)
+        return _amp
 
-        # 生成脉冲波形
-        wave_form = np.array([_amp for t in tlist])
-
-        self.wave_form_ls.append([tlist, wave_form, name])
-
-    def add_blackman(self, t_start, t_stop, _sigma, name='blackman'):
+    def blackman_wave(self, t, t_start, t_stop, _sigma):
         """
         产生 blackman 脉冲
 
+        :param t: t时刻
         :param t_start: 脉冲开始时刻
         :param t_stop: 脉冲结束时刻
         :param _sigma: 脉冲半高宽
-        :param name: 脉冲命名
+
+        :return: t时刻的振幅
         """
         # blackman脉冲振幅
-        _amp = amp(_sigma=_sigma)
+        _amp = self.amp(_sigma=_sigma)
 
+        return _amp * krotov.shapes.blackman(t, t_start=t_start, t_stop=t_stop)
+
+    @staticmethod
+    def amp(_sigma):
+        """
+        求解blackman脉冲振幅
+
+        :param _sigma: sigma
+
+        :return: 脉冲振幅
+        """
+        # Blackman pulse 积分前面的系数
+        const = 1.56246130414  # 让积分为 pi
+        _amp = const / (np.sqrt(2 * np.pi) * max([_sigma, 3]))
+
+        return _amp
+
+
+class Hamiltonian(Pulse):
+    """
+    Rotating Frame 下的体系哈密顿量
+    """
+
+    def __init__(self, _dim):
+        """
+        :param _dim: 希尔伯特空间维度
+        """
+        self.driving_ls = []
+        self.ham_drift = None
+        self.dim = _dim
+        self.a = destroy(_dim)
+        self.a_dag = self.a.dag()
+
+    def add_drift(self, kerr):
+        """
+        漂移项
+
+        :param kerr: 非谐性(self-kerr)，单位GHz
+        """
+        a = self.a
+        a_dag = self.a_dag
+
+        ham_drift = (kerr / 2) * (a_dag ** 2 * a ** 2)
+
+        self.ham_drift = ham_drift
+
+    def ham_driving(self, channel: str):
+        """
+        驱动哈密顿量算符
+
+        :param channel: 驱动添加通道 (x, y, z)
+
+        :return: 对应通道的哈密顿量算符
+        """
+        a = self.a
+        a_dag = self.a_dag
+        if channel == 'x':
+            ham_driving = a + a_dag
+        elif channel == 'y':
+            ham_driving = 1j * (a_dag - a)
+        elif channel == 'z':
+            ham_driving = 2 * (a_dag * a) + 1
+        else:
+            raise Exception('Wrong input! Please input x, y or z')
+
+        return ham_driving
+
+    def add_square_driving(self, channel: str, t_start: float, t_stop: float, _amp: float, steps=None):
+        """
+        添加方波驱动
+
+        :param channel: 脉冲添加通道 (x, y, z)
+        :param t_start: 脉冲开始时间 (单位ns)
+        :param t_stop: 脉冲结束时间 (单位ns)
+        :param _amp: 脉冲振幅
+        :param steps: 时间切片数量
+        """
         # 时间切片的个数，ceil 取大于输入的最小整数
-        steps = 4 * int(np.ceil(t_stop - t_start))
+        if steps is None:
+            steps = 4 * int(np.ceil(t_stop - t_start))
         # 时间切片
         tlist = np.linspace(t_start, t_stop, steps)
 
-        # 生成blackman脉冲波形
-        wave_form = np.array([_amp * krotov.shapes.blackman(t, t_start=t_start, t_stop=t_stop) for t in tlist])
+        # 驱动脉冲
+        def driving_pulse(t, args=None):
+            """
+            驱动脉冲函数: t时刻的脉冲振幅
 
-        self.wave_form_ls.append([tlist, wave_form, name])
+            :param t: t时刻
+            :param args: 相关参数，一般不填，为了krotov算法而设置
 
-    def plot_wave(self):
+            :return: t时刻的脉冲振幅
+            """
+            return self.square_wave(t, t_start=t_start, t_stop=t_stop, _amp=_amp)
+
+        # 驱动信息 [驱动哈密顿量, [时间列表, 脉冲波形函数], 驱动通道]
+        driving_info = [self.ham_driving(channel=channel), [tlist, driving_pulse], channel]
+
+        self.driving_ls.append(driving_info)
+
+    def add_blackman_driving(self, channel: str, t_start: float, t_stop: float, _sigma: float, steps=None):
+        """
+        添加 blackman 脉冲驱动
+
+        :param channel: 脉冲添加通道 (x, y, z)
+        :param t_start: 脉冲开始时间 (单位ns)
+        :param t_stop: 脉冲结束时间 (单位ns)
+        :param _sigma: 脉冲标准差
+        :param steps: 时间切片数量
+        """
+        # 时间切片的个数，ceil 取大于输入的最小整数
+        if steps is None:
+            steps = 4 * int(np.ceil(t_stop - t_start))
+        # 时间切片
+        tlist = np.linspace(t_start, t_stop, steps)
+
+        # 驱动脉冲
+        def driving_pulse(t, args=None):
+            """
+            驱动脉冲函数: t时刻的脉冲振幅
+
+            :param t: t时刻
+            :param args: 相关参数，一般不填，为了krotov算法而设置
+
+            :return: t时刻的脉冲振幅
+            """
+            return self.blackman_wave(t, t_start=t_start, t_stop=t_stop, _sigma=_sigma)
+
+        # 驱动信息 [驱动哈密顿量, [时间列表, 脉冲波形函数, 脉冲函数参数], 驱动通道]
+        driving_info = [self.ham_driving(channel=channel), [tlist, driving_pulse], channel]
+
+        self.driving_ls.append(driving_info)
+
+    def ham_info(self):
+        """
+        总哈密顿量信息
+
+        :return: [ham_drift, [ham_driving0, driving_pulse0], [ham_driving1, driving_pulse1], ...]
+        """
+
+        return [self.ham_drift] + [[driving_info[0], driving_info[1][1]] for driving_info in self.driving_ls]
+
+    def plot_pulse(self):
         """
         绘制脉冲波形
         """
         # 脉冲数量
-        wave_num = len(self.wave_form_ls)
+        pulse_num = len(self.driving_ls)
 
         # 绘图
-        plt.figure(figsize=(15, 4*wave_num), dpi=80)
-        for index, wave_form_info in enumerate(self.wave_form_ls):
+        plt.figure(figsize=(15, 4 * pulse_num), dpi=80)
+        for index, driving_info in enumerate(self.driving_ls):
+            plt.subplot(int(f'{pulse_num}1{index + 1}'))
+            # 脉冲的时间切片列表
+            tlist = driving_info[1][0]
+            # 脉冲只是函数，并不是完整列表
+            pulse_func = driving_info[1][1]
+            # 每一时刻脉冲的振幅
+            pulse = [pulse_func(t) for t in tlist]
 
-            plt.subplot(int(f'{wave_num}1{index+1}'))
-            tlist = wave_form_info[0]
-            wave_form = wave_form_info[1]
-            name = wave_form_info[2]
+            name = driving_info[2]
 
-            plt.plot(tlist, wave_form, label=f'${name}$')
+            plt.plot(tlist, pulse, label=f'${name}$')
             plt.legend()
             plt.ylabel('Pulse Amp')
 
@@ -78,19 +207,16 @@ class Wave(object):
         plt.show()
 
 
-def amp(_sigma):
+class Dynamics(object):
     """
-    求解脉冲振幅
-
-    :param _sigma: sigma
-
-    :return: 脉冲振幅
+    动力学演化
     """
-    # Blackman pulse 积分前面的系数
-    const = 1.56246130414  # 让积分为 pi
-    _amp = const / (np.sqrt(2 * np.pi) * max([_sigma, 3]))
 
-    return _amp
+    def __init__(self, _ham):
+        """
+        :param _ham: 哈密顿量
+        """
+        self.ham = _ham
 
 
 def proj(_psi, _phi=None):
@@ -146,7 +272,7 @@ def hamiltonian(_dim, _kerr, _omega, _amp):
     ham_d = (_kerr / 2) * (a_dag ** 2 * a ** 2)
     # Driving term
     ham_dr1 = a + a_dag
-    ham_dr2 = a - a_dag
+    ham_dr2 = 1j * (a_dag - a)
 
     amp_1 = lambda t, args: _amp
     amp_2 = lambda t, args: _amp
@@ -156,9 +282,46 @@ def hamiltonian(_dim, _kerr, _omega, _amp):
     return _ham
 
 
+def plot_population(occ, tls):
+    """
+    绘制布居概率随时间的变化
+
+    :param occ: 不同时刻在所有能级上的布居数 [occ0, occ1, occ2, ...]
+    :param tls: 时间切片列表
+    """
+    # 能级个数
+    num = len(occ)
+    plt.figure(figsize=(16, 10), dpi=80)
+
+    for i in range(num):
+        plt.plot(tls, occ[i], label='$|' + str(i) + r'\rangle$')
+    plt.xlabel('Time(ns)')
+    plt.ylabel('Occupation')
+    plt.legend()
+
+    plt.show()
+
+
+def occupation(dyn, _dim):
+    """
+    计算不同时刻的布居概率
+
+    :param dyn: mesolve演化后的函数
+    :param _dim: 维度
+    """
+    # 在|0>, |1>, |2>态的投影算符
+    occ_proj = [basis(_dim, i) * basis(_dim, i).dag() for i in range(_dim)]
+
+    # 计算布居概率
+    occ = expect(occ_proj, dyn.states)
+
+    # 绘制布居概率随时间的变化
+    plot_population(occ, dyn.times)
+
+
 if __name__ == '__main__':
     """
-    所有系数定义均以 GHZ 为单位
+    所有系数定义均以 GHZ 为单位，时间单位为 ns
     """
     # 维度
     dim = 3
@@ -166,9 +329,9 @@ if __name__ == '__main__':
     # 总时间
     T = 18 * 2
     sigma = T / 6
-    # steps = 4 * int(np.ceil(T))  # 时间切片的个数，ceil 取大于输入的最小整数
-    # 时间切片
-    # tlist = np.linspace(0, T, steps)
+    steps = 4 * int(np.ceil(T - 0))
+
+    tlist = np.linspace(0, T, steps)
 
     # 生成哈密顿量
     # 定义相关常数
@@ -176,10 +339,21 @@ if __name__ == '__main__':
     omega_q = 6.2815 * 2 * np.pi  # qubit 本征频率
     amp_01 = 1  # 驱动振幅
     # 哈密顿量
-    ham = hamiltonian(_dim=dim, _kerr=kerr_q, _omega=omega_q, _amp=amp_01)
+    ham = Hamiltonian(_dim=dim)
+    # 添加漂移项
+    ham.add_drift(kerr=kerr_q)
 
     # 初始脉冲
-    wave = Wave()
-    wave.add_square_wave(t_start=0, t_stop=T, _amp=0, name='u_1(t)')
-    wave.add_blackman(t_start=0, t_stop=T, _sigma=sigma, name='u_0(t)')
-    wave.plot_wave()
+    ham.add_square_driving(channel='x', t_start=0, t_stop=T, _amp=0)
+    ham.add_blackman_driving(channel='y', t_start=0, t_stop=T, _sigma=sigma)
+    # 绘制脉冲
+    ham.plot_pulse()
+
+    # 动力学演化
+    objective = krotov.Objective(initial_state=basis(dim, 0), target=basis(dim, 1), H=ham.ham_info())
+
+    # 试探演化
+    guess_dynamics = objective.mesolve(tlist=tlist, progress_bar=True, options=Options(nsteps=50000))
+
+    # 布局概率随时间的演化
+    occupation(guess_dynamics, _dim=dim)

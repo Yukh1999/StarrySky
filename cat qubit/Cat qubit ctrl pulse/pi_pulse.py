@@ -228,7 +228,6 @@ def proj(_psi, _phi=None):
     :param _phi: 被投影的态
 
     :return: 投影算符 |psi)(phi|
-
     """
 
     if _phi is None:
@@ -310,7 +309,7 @@ def occupation(dyn, _dim):
     :param _dim: 维度
     """
     # 在|0>, |1>, |2>态的投影算符
-    occ_proj = [basis(_dim, i) * basis(_dim, i).dag() for i in range(_dim)]
+    occ_proj = [proj(_psi=basis(_dim, i)) for i in range(_dim)]
 
     # 计算布居概率
     occ = expect(occ_proj, dyn.states)

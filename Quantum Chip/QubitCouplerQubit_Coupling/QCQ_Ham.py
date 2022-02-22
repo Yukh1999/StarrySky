@@ -69,7 +69,7 @@ def plot_coupling_energy(_ind_junc, _energies):
     # print(_energies)
     for _energy in _energies:
         for energy_ in _energy:
-            if get_n_float(energy_, 8) == '7567.54770353':
+            if get_n_float(energy_, 9) == '7801.859509755':
                 energy_symmetric.append(energy_)
             else:
                 energy_asymmetric.append(energy_)
@@ -80,15 +80,15 @@ def plot_coupling_energy(_ind_junc, _energies):
 
     plt.subplot(211)
     # plt.plot(_ind_junc, energy_symmetric, label='Symmetric')
-    plt.axhline(y=7567.54770353, label=r'$|01\rangle + |10\rangle$', color='orange')
+    plt.axhline(y=7801.859509755, label=r'$|01\rangle + |10\rangle$', color='orange')
     plt.plot(_ind_junc, energy_asymmetric, label=r'$|01\rangle - |10\rangle$', linestyle='--')
     plt.xlabel('$L_j(nH)$')
     plt.ylabel('Energy(MHz)')
     plt.legend()
-    plt.xlim([3.5, 15])
+    plt.xlim([3.5, 20])
 
-    step_length = (15 - 3.5) / 100
-    n = int(np.ceil((4.28905 - 3.5) / step_length))
+    step_length = (20 - 3.5) / 100
+    n = int(np.ceil((3.86 - 3.5) / step_length))
 
     plt.fill_between(x=ind_junc_c_ls[n:], y1=energy_symmetric[n:], y2=energy_asymmetric[n:],
                      facecolor='yellow', alpha=0.2)
@@ -99,7 +99,7 @@ def plot_coupling_energy(_ind_junc, _energies):
     coupling = (energy_asymmetric - energy_symmetric) / 2
     plt.plot(_ind_junc, coupling, label='Coupling Strength')
     plt.axhline(y=0, color='purple', linestyle='--')
-    plt.axvline(x=4.37, color='purple', linestyle='--')
+    plt.axvline(x=3.94, color='purple', linestyle='--')
     plt.xlabel('$L_j(nH)$')
     plt.ylabel('Coupling Strength(MHz)')
 
@@ -152,8 +152,11 @@ a_c = tensor([iden, iden, a])
 a_c_dag = a_c.dag()
 
 # 相关常数(MHz)
-freq_1 = 7.5549413566083e3
-freq_2 = 7.5549413566083e3
+# freq_1 = 7.5549413566083e3
+# freq_2 = 7.5549413566083e3
+
+freq_1 = 7.784297586714789e3
+freq_2 = freq_1
 
 # 打开耦合
 freq_c_open = 3.612354870502798e3
@@ -188,7 +191,7 @@ def hamiltonian(freq_c, g_1c, g_2c, g_12):
 # 求解不同coupler电感下的能级(MHz)
 eigen_energies = []
 freq_c_ls = []
-ind_junc_c_ls = np.linspace(3.5, 15, 100)
+ind_junc_c_ls = np.linspace(3.5, 20, 100)
 for ind_junc in ind_junc_c_ls:
     res = freq_coupling(ind_junc_c=ind_junc * 1e-9)  # 电感从 nH 转化为 H
     _freq_c = res['freq'][2] * 1e-6
@@ -201,6 +204,7 @@ for ind_junc in ind_junc_c_ls:
     freq_c_ls.append(_freq_c)
     eigen_energies.append([energies[2], energies[3]])
 
+print(eigen_energies)
 # 绘制Freq_c随Lj变化图
 plot_freq_c(_ind_junc=ind_junc_c_ls, freq_c=freq_c_ls)
 

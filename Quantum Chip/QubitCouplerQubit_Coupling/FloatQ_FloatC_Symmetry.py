@@ -22,10 +22,42 @@ def xi(E_C, E_J):
     return np.sqrt(2 * E_C / E_J)
 
 
+# # 输入值
+# # 自电容
+# cap_q = 55.19e-15
+# cap_c = 61.97e-15
+#
+# # 约瑟夫森电感
+# ind_junc_q = 6e-9
+#
+# # 耦合关断: 6.399 GHz
+# # ind_junc_c = 4.28905
+# # 耦合打开: 3.61235 GHz
+# # ind_junc_c = 13e-9
+#
+# # 对地电容
+# cap_gq1 = 13.82e-15
+# cap_gq2 = 401.11e-15
+# cap_gq = 2 / (1 / cap_gq1 + 1 / cap_gq2)
+# cap_gc = 152e-15
+#
+# # 互电容
+# # qubit_1 和 coupler 互电容: qubit_1(1,2), coupler(3,4)
+# cap_23 = 16.84e-15
+# cap_14 = 0.08e-15
+# cap_13 = 0.23e-15
+# cap_24 = 2.75e-15
+#
+# # qubit_2 和 coupler 互电容: qubit_2(5,6), coupler(3,4)
+# cap_35 = 2.75e-15
+# cap_36 = 0.08e-15
+# cap_46 = 0.23e-15
+# cap_45 = 16.84e-15
+
 # 输入值
 # 自电容
-cap_q = 55.19e-15
-cap_c = 61.97e-15
+cap_q = 51.72e-15
+cap_c = 65.05e-15
 
 # 约瑟夫森电感
 ind_junc_q = 6e-9
@@ -36,23 +68,23 @@ ind_junc_q = 6e-9
 # ind_junc_c = 13e-9
 
 # 对地电容
-cap_gq1 = 13.82e-15
-cap_gq2 = 401.11e-15
+cap_gq1 = 13.10e-15
+cap_gq2 = 401.08e-15
 cap_gq = 2 / (1 / cap_gq1 + 1 / cap_gq2)
-cap_gc = 152e-15
+cap_gc = 144.96e-15
 
 # 互电容
 # qubit_1 和 coupler 互电容: qubit_1(1,2), coupler(3,4)
-cap_23 = 16.84e-15
-cap_14 = 0.08e-15
+cap_23 = 17.80e-15
+cap_14 = 0.11e-15
 cap_13 = 0.23e-15
-cap_24 = 2.75e-15
+cap_24 = 3.25e-15
 
 # qubit_2 和 coupler 互电容: qubit_2(5,6), coupler(3,4)
-cap_35 = 2.75e-15
+cap_35 = 3.25e-15
 cap_36 = 0.08e-15
 cap_46 = 0.23e-15
-cap_45 = 16.84e-15
+cap_45 = 17.80e-15
 
 # 自电容能
 E_C1 = e ** 2 / (2 * cap_q + cap_gq)
@@ -172,7 +204,7 @@ def plot_detuning_coupling(ind_junc_c, detuning, coupling):
     ax2.set_ylabel('Detuning(MHz)', fontsize=20)
 
     # 标定0耦合垂直线
-    ax2.axvline(x=4.28905, linestyle='--', color='purple', linewidth=3)
+    ax2.axvline(x=3.88, linestyle='--', color='purple', linewidth=3)
 
     plt.setp(ax1.get_xticklabels(), size=20)
     plt.setp(ax1.get_yticklabels(), size=20)
@@ -212,7 +244,7 @@ def plot_coupling_qc(coupler_freq, coupling_1c, coupling_2c):
 
 
 # 定义coupler电感变化的范围
-ind_junc_c_list = np.linspace(3.5, 15, 100)
+ind_junc_c_list = np.linspace(3.5, 20, 100)
 # 计算不同coupler电感下的频率以及耦合强度
 detuning_list = []
 coupling_list = []
@@ -227,7 +259,7 @@ for _ind_junc_c in ind_junc_c_list:
     coupling_list.append(coupling)
 
 # 绘图
-# plot_detuning_coupling(ind_junc_c_list, detuning_list, coupling_list)
+plot_detuning_coupling(ind_junc_c_list, detuning_list, coupling_list)
 
 if __name__ == '__main__':
     coupler_freq_ls = []
@@ -241,7 +273,7 @@ if __name__ == '__main__':
 
     # plot_coupling_qc(coupler_freq_ls, coupling_1c_ls, coupling_2c_ls)
 
-    freq_coupling(ind_junc_c=4.37e-9)
+    freq_coupling(ind_junc_c=20e-9)
 # 输出数据
 # print('-' * 100)
 # print('本征频率:')

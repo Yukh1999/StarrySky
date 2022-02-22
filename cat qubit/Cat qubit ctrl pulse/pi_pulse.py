@@ -296,6 +296,7 @@ def plot_population(occ, tls):
         plt.plot(tls, occ[i], label='$|' + str(i) + r'\rangle$')
     plt.xlabel('Time(ns)')
     plt.ylabel('Occupation')
+    plt.xlim([0, 30])
     plt.legend()
 
     plt.show()
@@ -326,7 +327,7 @@ if __name__ == '__main__':
     dim = 3
 
     # 总时间
-    T = 18 * 2
+    T = 20
     sigma = T / 6
     steps = 4 * int(np.ceil(T - 0))
 
@@ -355,4 +356,5 @@ if __name__ == '__main__':
     guess_dynamics = objective.mesolve(tlist=tlist, progress_bar=True, options=Options(nsteps=50000))
 
     # 布局概率随时间的演化
+    # TODO 布居概率在其他时间与论文结果不符合，需要继续调试
     occupation(guess_dynamics, _dim=dim)

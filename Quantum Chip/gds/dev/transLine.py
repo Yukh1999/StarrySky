@@ -207,7 +207,7 @@ def widerTl(startCoord: List, endCoord: List, lineWidth: float, gapWidth: float,
 
     # Ending part
     endPartStartCoord = [endCoord[0] - endLineLength * np.cos(theta),
-                         endCoord[1] - endLineLength + np.sin(theta)]
+                         endCoord[1] - endLineLength * np.sin(theta)]
     endPartCoords = transLine(startCoord=endPartStartCoord, endCoord=endCoord,
                               lineWidth=lineWidth, gapWidth=gapWidth, cell=cell)
 
@@ -233,9 +233,10 @@ def widerTl(startCoord: List, endCoord: List, lineWidth: float, gapWidth: float,
 
 
 for i in range(5):
-    x = 5 + i * 100
-    widerTl(startCoord=[x, 6], endCoord=[x, 1000], lineWidth=4, gapWidth=4, widerStartCoord=[x, 300], widerLineWidth=8,
-            widerGapWidth=8, widerLength=30, transitionLength=10, cell=lineCell)
+    x1 = 800 * i
+    x2 = 800 * (i+1)
+    widerTl(startCoord=[x1, 5], endCoord=[x2, 5], lineWidth=4, gapWidth=4, widerStartCoord=[300 + 800*i, 5],
+            widerLineWidth=8, widerGapWidth=8, widerLength=30, transitionLength=10, cell=lineCell)
 
 lib.write_gds('tl.gds')
 gdspy.LayoutViewer()

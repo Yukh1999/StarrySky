@@ -232,11 +232,13 @@ def widerTl(startCoord: List, endCoord: List, lineWidth: float, gapWidth: float,
     cutOff(startCoord=widerStartCoord, endCoord=widerEndCoord, length=transitionLength, width=56, cell=cell, layer=5)
 
 
-for i in range(5):
-    x1 = 800 * i
-    x2 = 800 * (i+1)
-    widerTl(startCoord=[x1, 5], endCoord=[x2, 5], lineWidth=4, gapWidth=4, widerStartCoord=[300 + 800*i, 5],
-            widerLineWidth=8, widerGapWidth=8, widerLength=30, transitionLength=10, cell=lineCell)
+if __name__ == '__main__':
 
-lib.write_gds('tl.gds')
-gdspy.LayoutViewer()
+    for i in range(5):
+        x1 = 800 * i
+        x2 = 800 * (i + 1)
+        widerTl(startCoord=[x1, 5], endCoord=[x2, 5], lineWidth=4, gapWidth=4, widerStartCoord=[300 + 800 * i, 5],
+                widerLineWidth=8, widerGapWidth=8, widerLength=30, transitionLength=10, cell=lineCell)
+
+    lib.write_gds('tl.gds')
+    gdspy.LayoutViewer()

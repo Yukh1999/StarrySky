@@ -121,6 +121,7 @@ def rectAnyDirection(startCoord: List, endCoord: List, rectWidth: float, cell: C
 def cutOff(startCoord: List, endCoord: List, length: float, width: float, cell: Cell, layer: int = 0):
     """
     Add cut-off zone at the starting and end
+
     :param startCoord: starting coordinate [x, y]
     :param endCoord: ending coordinate [x, y]
     :param length: length of cut-off zone
@@ -234,7 +235,7 @@ def widerTl(startCoord: List, endCoord: List, lineWidth: float, gapWidth: float,
 
 if __name__ == '__main__':
 
-    for i in range(5):
+    for i in range(3):
         x1 = 800 * i
         x2 = 800 * (i + 1)
         widerTl(startCoord=[x1, 5], endCoord=[x2, 5], lineWidth=4, gapWidth=4, widerStartCoord=[300 + 800 * i, 5],

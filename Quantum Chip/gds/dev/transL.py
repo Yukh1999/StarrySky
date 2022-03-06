@@ -1,6 +1,6 @@
 import gdspy
 from gdspy.library import Cell
-from typing import List, Union, Iterable, Sequence
+from typing import List, Union, Iterable, Sequence, Dict, Any
 import numpy as np
 
 
@@ -44,6 +44,81 @@ def lineAngle(startCoord: List, endCoord: List):
     return theta
 
 
+def _lineAirBridge(startInfo: Dict[str, Any], length: Union[int, float]) -> Dict[str, Any]:
+    holeLength = 5
+    holeDistance = 5
+    originPos = startInfo['position']
+    startDirection = startInfo['direction']
+    if type(startDirection) == str:
+        if startDirection == '+x':
+            startDirection = 0
+        elif startDirection == '+y':
+            startDirection = np.pi / 2
+        elif startDirection == '-x':
+            startDirection = np.pi
+        elif startDirection == '-y':
+            startDirection = np.pi / 2 * 3
+        else:
+            raise Exception("Please input startDirection as '+x', '-x', '+y', '-y' or a number.")
+    startHoleLength = startInfo['startHoleLength']
+    if 'elementList' in startInfo:
+        elementList = startInfo['elementList']
+    else:
+        elementList = list()
+
+    if length >= startHoleLength:
+        holeNumber = int((length - startHoleLength) // (holeLength + holeDistance))
+        endLength = (length - startHoleLength) % (holeLength + holeDistance)
+
+        if startHoleLength > holeLength:
+            pStartInterval = gdspy.Path(width=5, initial_point=originPos, number_of_paths=2, distance=32)
+            pStartInterval.segment(length=(startHoleLength - holeLength), direction=startDirection, layer=3)
+            endPos = [pStartInterval.x, pStartInterval.y]
+            pStartHole = gdspy.Path(width=5, initial_point=endPos, number_of_paths=2, distance=32)
+            pStartHole.segment(length=holeLength, direction=startDirection, layer=3)
+
+        else:
+            pStartHole = gdspy.Path(width=5, initial_point=originPos, number_of_paths=2, distance=32)
+            pStartHole.segment(length=startHoleLength, direction=startDirection, layer=3)
+
+        elementList.append(pStartHole)
+        endPos = [pStartHole.x, pStartHole.y]
+
+        intervalList = list()
+        holeList = list()
+        for i in range(holeNumber):
+            intervalList.append(gdspy.Path(width=5, initial_point=endPos, number_of_paths=2, distance=32))
+            intervalList[i].segment(length=holeDistance, direction=startDirection, layer=3)
+            endPos = [intervalList[i].x, intervalList[i].y]
+            holeList.append(gdspy.Path(width=5, initial_point=endPos, number_of_paths=2, distance=32))
+            holeList[i].segment(length=holeLength, direction=startDirection, layer=3)
+            endPos = [holeList[i].x, holeList[i].y]
+        elementList.extend(holeList)
+
+    else:
+        endLength = length
+        endPos = originPos
+
+    if endLength > holeDistance:
+        pEndInterval = gdspy.Path(width=5, initial_point=endPos, number_of_paths=2, distance=32)
+        pEndInterval.segment(length=holeDistance, direction=startDirection, layer=3)
+        endPos = [pEndInterval.x, pEndInterval.y]
+        pEndHole = gdspy.Path(width=5, initial_point=endPos, number_of_paths=2, distance=32)
+        pEndHole.segment(length=(endLength - holeDistance), direction=startDirection, layer=3)
+        endPos = [pEndHole.x, pEndHole.y]
+        elementList.append(pEndHole)
+    else:
+        pEndInterval = gdspy.Path(width=5, initial_point=endPos, number_of_paths=2, distance=32)
+        pEndInterval.segment(length=endLength, direction=startDirection, layer=3)
+        endPos = [pEndInterval.x, pEndInterval.y]
+
+    nextHoleLength = holeLength + holeDistance - endLength
+    endInfo = {'position': endPos, 'direction': startDirection,
+               'startHoleLength': nextHoleLength, 'elementList': elementList}
+
+    return endInfo
+
+
 def shield(startCoord: List[float], endCoord: List[float], cell: Cell):
     """
     Shield layer
@@ -57,18 +132,27 @@ def shield(startCoord: List[float], endCoord: List[float], cell: Cell):
     # Length
     length = pointsDistance(startCoord, endCoord)
     # Layer 2
-    layer2 = gdspy.Path(width=5, initial_point=startCoord, number_of_paths=2, distance=24 + 5)
+    layer2 = gdspy.Path(width=5, initial_point=startCoord, number_of_paths=2, distance=32)
     layer2.segment(length=length, direction=theta, layer=2)
 
+    # Layer 1
+    layer3 = gdspy.Path(width=39, initial_point=startCoord, number_of_paths=1)
+    layer3.segment(length=length, direction=theta, layer=1)
+
+    # Layer 0
+    layer0 = gdspy.Path(width=56, initial_point=startCoord, number_of_paths=1)
+    layer0.segment(length=length, direction=theta, layer=0)
+
     # Layer 3
-    layer3 = gdspy.Path(width=36, initial_point=startCoord, number_of_paths=1)
-    layer3.segment(length=length, direction=theta, layer=3)
+    startInfo = {
+        'position': startCoord,
+        'direction': theta,
+        'startHoleLength': 5,
+    }
+    elementLs = _lineAirBridge(startInfo=startInfo, length=length)['elementList']
+    cell.add(elementLs)
 
-    # Layer 4
-    layer4 = gdspy.Path(width=56, initial_point=startCoord, number_of_paths=1)
-    layer4.segment(length=length, direction=theta, layer=4)
-
-    cell.add([layer2, layer3, layer4])
+    cell.add([layer2, layer3, layer0])
 
 
 def cutOff(startCoord: List, endCoord: List, length: float, cell: Cell):
@@ -98,6 +182,10 @@ def cutOff(startCoord: List, endCoord: List, length: float, cell: Cell):
     cell.add([left, right])
 
 
+def toAnsysCoord(coord: List[float]):
+    return [coord[1], -coord[0]]
+
+
 def transLine(startCoord: List[float], endCoord: List[float], lineWidth: float, gapWidth: float,
               widerStartPosition: Union[float, List[float]], widerLineWidth: Union[float, List[float]],
               widerGapWidth: Union[float, List[float]], widerLength: Union[float, List[float]],
@@ -109,12 +197,16 @@ def transLine(startCoord: List[float], endCoord: List[float], lineWidth: float, 
     :param endCoord: ending coordinates [x, y]
     :param lineWidth: the line width of common part
     :param gapWidth: the gap width of common part
-    :param widerStartPosition: the starting position of wider parts in line
+    :param widerStartPosition: the distance between starting position of wider parts and starting
     :param widerLineWidth: the line width of wider parts
     :param widerGapWidth: the gap width of wider parts
     :param widerLength: the length of wider parts
     :param transitionLength: the length of transition zone connecting common and wider parts
     """
+    # Transform to ansys coordinate
+    startCoordAnsys = toAnsysCoord(startCoord)
+    endCoordAnsys = toAnsysCoord(endCoord)
+
     if isinstance(widerStartPosition, Sequence):
         widerNum = len(widerStartPosition)
     else:
@@ -123,11 +215,14 @@ def transLine(startCoord: List[float], endCoord: List[float], lineWidth: float, 
 
     # The angle between line and x-axis
     theta = lineAngle(startCoord=startCoord, endCoord=endCoord)
+    thetaAnsys = lineAngle(startCoordAnsys, endCoordAnsys)
 
     # The start coordinates of wider part
     widerStartCoord = [[startCoord[0] + startPosition * np.cos(theta),
                         startCoord[1] + startPosition * np.sin(theta)]
                        for startPosition in widerStartPosition]
+
+    widerStartCoordAnsys = [toAnsysCoord(widerCoord) for widerCoord in widerStartCoord]
 
     if isinstance(widerLineWidth, Iterable) is not True:
         widerLineWidth = [widerLineWidth for i in range(widerNum)]
@@ -139,54 +234,61 @@ def transLine(startCoord: List[float], endCoord: List[float], lineWidth: float, 
         widerLength = [widerLength for i in range(widerNum)]
 
     # Drawing
-    line = gdspy.Path(width=gapWidth, initial_point=startCoord, number_of_paths=2, distance=lineWidth + gapWidth)
+    line = gdspy.Path(width=gapWidth, initial_point=startCoordAnsys, number_of_paths=2, distance=lineWidth + gapWidth)
 
     # Starting line
     startLength = pointsDistance(startCoord, widerStartCoord[0]) - transitionLength
     startLineEndCoord = [startCoord[0] + startLength * np.cos(theta),
                          startCoord[1] + startLength * np.sin(theta)]
-    line.segment(length=startLength, direction=theta)
-    shield(startCoord=startCoord, endCoord=startLineEndCoord, cell=cell)
+    startLineEndCoordAnsys = toAnsysCoord(startLineEndCoord)
+    line.segment(length=startLength, direction=thetaAnsys, layer=4)
+    shield(startCoord=startCoordAnsys, endCoord=startLineEndCoordAnsys, cell=cell)
 
     # Midpiece
     for i in range(widerNum):
-        line.segment(length=transitionLength, direction=theta, final_width=widerGapWidth[i],
-                     final_distance=widerLineWidth[i] + widerGapWidth[i])
-        line.segment(length=widerLength[i], direction=theta)
-        line.segment(length=transitionLength, direction=theta, final_width=gapWidth,
-                     final_distance=lineWidth + gapWidth)
+        line.segment(length=transitionLength, direction=thetaAnsys, final_width=widerGapWidth[i],
+                     final_distance=widerLineWidth[i] + widerGapWidth[i], layer=4)
+        line.segment(length=widerLength[i], direction=thetaAnsys, layer=4)
+        line.segment(length=transitionLength, direction=thetaAnsys, final_width=gapWidth,
+                     final_distance=lineWidth + gapWidth, layer=4)
         widerEndCoord = [widerStartCoord[i][0] + widerLength[i] * np.cos(theta),
                          widerStartCoord[i][1] + widerLength[i] * np.sin(theta)]
-        cutOff(startCoord=widerStartCoord[i], endCoord=widerEndCoord, length=transitionLength, cell=cell)
+        widerEndCoordAnsys = toAnsysCoord(widerEndCoord)
+        cutOff(startCoord=widerStartCoordAnsys[i], endCoord=widerEndCoordAnsys, length=transitionLength, cell=cell)
 
         if i != widerNum - 1:
             commonLineLength = pointsDistance(widerStartCoord[i], widerStartCoord[i + 1]) \
                                - transitionLength * 2 - widerLength[i]
-            line.segment(length=commonLineLength, direction=theta)
+            line.segment(length=commonLineLength, direction=thetaAnsys, layer=4)
             commonLineStartCoord = [widerStartCoord[i][0] + (transitionLength + widerLength[i]) * np.cos(theta),
                                     widerStartCoord[i][1] + (transitionLength + widerLength[i]) * np.sin(theta)]
             commonLineEndCoord = [commonLineStartCoord[0] + commonLineLength * np.cos(theta),
                                   commonLineStartCoord[1] + commonLineLength * np.sin(theta)]
-            shield(startCoord=commonLineStartCoord, endCoord=commonLineEndCoord, cell=cell)
+            shield(startCoord=toAnsysCoord(commonLineStartCoord), endCoord=toAnsysCoord(commonLineEndCoord), cell=cell)
 
     # Ending line
     endLength = pointsDistance(widerStartCoord[widerNum - 1], endCoord) - widerLength[widerNum - 1] - transitionLength
-    line.segment(length=endLength, direction=theta)
+    line.segment(length=endLength, direction=thetaAnsys, layer=4)
     endLineStartCoord = [endCoord[0] - endLength * np.cos(theta),
                          endCoord[1] - endLength * np.sin(theta)]
-    shield(startCoord=endLineStartCoord, endCoord=endCoord, cell=cell)
+    shield(startCoord=toAnsysCoord(endLineStartCoord), endCoord=toAnsysCoord(endCoord), cell=cell)
 
     cell.add(line)
 
 
 if __name__ == '__main__':
-    widerPosition = [100, 200, 300, 400, 500]
+    widerPosition = [-1920 + i * 2800 + 3600 for i in range(5)]
     # Access to lib
     lib = gdspy.GdsLibrary()
 
     # Line cell
     lineCell = lib.new_cell('transLine')
-    transLine(startCoord=[0, 0], endCoord=[1000, 500], lineWidth=4, gapWidth=4, widerStartPosition=widerPosition,
-              widerLineWidth=8, widerGapWidth=8, widerLength=30, transitionLength=10, cell=lineCell)
+
+    for row in range(5):
+        readoutLeft = [-300 + 2800 * row, -3600]
+        readoutRight = [-300 + 2800 * row, 13200]
+        transLine(readoutLeft, readoutRight, 5, 5, [-1920 + i * 2800 + 3600 for i in range(5)],
+                  20, 10, 1400, 100, lineCell)
+
     lib.write_gds('tl.gds')
     gdspy.LayoutViewer()

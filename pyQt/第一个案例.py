@@ -16,14 +16,14 @@ class Stats():
         self.window = QMainWindow()
         self.window.resize(500, 400)
         self.window.move(300, 300)
-        self.window.setWindowTitle('薪资统计')
+        self.window.setWindowTitle('量子芯片设计')
 
         self.textEdit = QPlainTextEdit(self.window)
-        self.textEdit.setPlaceholderText("请输入薪资表")
+        self.textEdit.setPlaceholderText("请输入Qubit类型")
         self.textEdit.move(10, 25)
         self.textEdit.resize(300, 350)
 
-        self.button = QPushButton('统计', self.window)
+        self.button = QPushButton('提交', self.window)
         self.button.move(380, 80)
 
         self.button.clicked.connect(self.handleCalc)

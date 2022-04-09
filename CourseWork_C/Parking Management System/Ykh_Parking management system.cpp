@@ -1144,23 +1144,68 @@ void password()       //密码管理模块
 	FILE *fp;
 	char a[9] = { 0 }, b[9] = { 0 };
 	int i;
+	int psw;
 	while (true)
-	{
+	{	
+		system("cls");
 		printf("\n\n请输入新密码(8位密码):");
 		i = 0;
 		while (i < 8)
 		{
-			a[i] = getch();
-			printf("*");
-			i++;
+			psw = getch();
+			if (psw == 8)
+			{	
+				if (i == 0)
+				{
+					continue;
+				}
+				else
+				{
+					i--;
+					system("cls");
+					printf("\n\n请输入新密码(8位密码):");
+					for (int j=0; j<i; j++)
+					{
+						printf("*");
+					}
+				}	
+			}
+			else
+			{
+				printf("*");
+				a[i] = psw;
+				i++;
+			}
 		}
+		system("cls");
 		printf("\n\n再次确认密码:");
 		i = 0;
 		while (i < 8)
-		{
-			b[i] = getch();
-			printf("*");
-			i++;
+		{	
+			psw = getch();
+			if (psw == 8)
+			{	
+				if (i == 0)
+				{
+					continue;
+				}
+				else
+				{
+					i--;
+					system("cls");
+					printf("\n\n再次确认密码:");
+					for (int j=0; j<i; j++)
+					{
+						printf("*");
+					}	
+				}
+			}
+			else
+			{
+				b[i] = psw;
+				printf("*");
+				i++;
+			}
 		}
 		if (strcmp(a, b) == 0)     //两次输入一致进入该模块
 		{
@@ -1203,12 +1248,36 @@ int main()
 	{
 		i = 0;
 		n = 1;
+		int psw;
 		printf("#请输入密码:");
 		while (i < 8)
-		{
-			a[i] = getch();
-			printf("*");
-			i++;
+		{	
+			psw = getch();
+			if (psw == 8)
+			{	
+				if (i == 0)
+				{
+					continue;
+				}
+				else
+				{
+					i--;
+					system("cls");
+					printf("\n********************************\n\n");        //美化界面与提示字符 
+					printf("      欢迎来到泊车管理系统      \n\n");
+					printf("#请输入密码:");
+					for (int j=0; j<i; j++)
+					{
+						printf("*");
+					}
+				}
+			}
+			else
+			{
+				a[i] = psw;
+				printf("*");
+				i++;
+			}
 		}
 		system("cls");
 		for (i = 0; i < 8; i++)

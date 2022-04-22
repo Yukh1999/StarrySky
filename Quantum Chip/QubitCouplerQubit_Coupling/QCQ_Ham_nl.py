@@ -67,6 +67,10 @@ print('E_diff_lin: ', E_diff_lin)
 print('E_diff_nl', E_diff_nl)
 # 绘图
 fig, axs = plt.subplots(2, 2, sharex=True)
+fig.suptitle('Freq_qubit=5000MHz, alpha=-300MHz\n $g_{12}=8MHz$, $g_{qc}=100MHz$ \n'
+             + r'$H = \sum_i \omega_i a_i^\dagger a_i - \frac{\alpha}{2}a_i^{\dagger 2} a_i^2 '
+               r'+\sum_{i\neq j} g_{ij}a_i^\dagger a_j + a_i a_j^\dagger$', fontsize=13)
+
 axs[0][0].plot(freq_c_ls, E1_nl, label='E1_nl')
 axs[0][0].plot(freq_c_ls, E2_nl, label='E2_nl')
 axs[0][0].legend()
@@ -80,10 +84,12 @@ axs[1][0].plot(freq_c_ls, E2_nl, label='E2_nl')
 axs[1][0].plot(freq_c_ls, E1_lin, label='E1_lin')
 axs[1][0].plot(freq_c_ls, E2_lin, label='E2_lin')
 axs[1][0].legend()
+axs[1][0].set_xlabel('Freq_coupler')
 
 axs[1][1].plot(freq_c_ls, E_diff_nl, label='E_diff_nl')
 axs[1][1].plot(freq_c_ls, E_diff_lin, label='E_diff_lin')
 axs[1][1].legend()
+axs[1][1].set_xlabel('Freq_coupler')
 
 plt.show()
 

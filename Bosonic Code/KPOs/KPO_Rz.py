@@ -9,10 +9,11 @@ import numpy as np
 from scipy import integrate
 import krotov
 from matplotlib import pyplot as plt
+import pandas as pd
 
 # 定义常数
 N = 20  # 维度
-delta = 10  # 失谐
+delta = 0  # 失谐
 K = 1  # 非线性强度
 p0 = 4 * K  # 双光子驱动强度
 
@@ -79,13 +80,17 @@ def plot_wave(wave, tls, args):
     """
     plot wave
     """
-    plt.figure()
+    plt.figure(figsize=(16, 12), dpi=100)
 
     wave_sequence = []
     for _t in tls:
         wave_sequence.append(wave(_t, *args))
 
-    plt.plot(tls, wave_sequence)
+    plt.plot(tls, wave_sequence, linewidth=5)
+    plt.xlabel('Time', fontsize=18)
+    plt.ylabel('Amp', fontsize=18)
+    plt.xticks(fontsize=18)
+    plt.yticks(fontsize=18)
     plt.show()
 
 
@@ -111,14 +116,15 @@ def ham_black(_t, args):
 
 
 # 脉冲总时间
-Tg = 2 / K
+Tg_fold = 2
+Tg = Tg_fold / K
+Tg_fold_ls = np.linspace(1, 10, 20)
+Tg_ls = Tg_fold_ls / K
 
 # 期望的 Rz 门旋转角度
-phi = np.pi
-phi_ls = np.linspace(-np.pi, np.pi, 11)
-
-# 时间列表
-tlist = np.linspace(0, Tg, 100)
+x = 4
+phi = np.pi / x
+phi_ls = np.linspace(-np.pi, np.pi, 21)
 
 # 初态
 initial_state = (logical_0 + logical_1).unit()
@@ -143,22 +149,25 @@ def solve_fidelity(_ham, _initial_state, tls, args):
     return np.abs(np.array(final_state.dag() * ideal_state)[0][0]) ** 2
 
 
-plot_wave(blackman_pulse, tlist, args=(phi, Tg))
-plot_wave(P_d, tlist, args=(phi, Tg))
+# plot_wave(blackman_pulse, tlist, args=(phi, Tg))
+# plot_wave(P_d, tlist, args=(phi, Tg))
 
 
-def get_fidelity_ham(_phi):
-    return solve_fidelity(ham, initial_state, tlist, args=(_phi, Tg))
+def get_fidelity_ham(tls, _phi, _Tg):
+    return solve_fidelity(ham, initial_state, tls, args=(_phi, _Tg))
 
 
-def get_fidelity_ham_blk(_phi):
-    return solve_fidelity(ham_black, initial_state, tlist, args=(_phi, Tg))
+def get_fidelity_ham_blk(tls, _phi, _Tg):
+    return solve_fidelity(ham_black, initial_state, tls, args=(_phi, _Tg))
 
 
-for phi in phi_ls:
-    fidelity = get_fidelity_ham(phi)
+for Tg in Tg_ls:
+    # 时间列表
+    tlist = np.linspace(0, Tg, 100)
+
+    fidelity = get_fidelity_ham(tlist, phi, Tg)
     fidelity_ls.append(fidelity)
-    fidelity_BLK = get_fidelity_ham_blk(phi)
+    fidelity_BLK = get_fidelity_ham_blk(tlist, phi, Tg)
     fidelity_BLK_ls.append(fidelity_BLK)
 
 fidelity_ls = np.array(fidelity_ls)
@@ -167,16 +176,26 @@ infidelity_ls = 1 - fidelity_ls
 fidelity_BLK_ls = np.array(fidelity_BLK_ls)
 infidelity_BLK_ls = 1 - fidelity_BLK_ls
 
+print('BLK_Infi: \n', infidelity_BLK_ls)
+print('Ori_Infi: \n', infidelity_ls)
+
+# 存储数据
+df = pd.DataFrame({'Infidelity_BLK': infidelity_BLK_ls, 'Infidelity_Ori': infidelity_ls})
+df.to_csv(f"Infidelity_phi{int(x*3)}.csv")
+
 # 绘图
-plt.figure()
-plt.plot(phi_ls, infidelity_ls, label='infidelity')
-plt.scatter(phi_ls, infidelity_ls)
+plt.figure(figsize=(16, 12), dpi=100)
+plt.plot(Tg_fold_ls, infidelity_ls, label='infidelity', linewidth=5)
+plt.scatter(Tg_fold_ls, infidelity_ls, linewidth=6)
 
-plt.plot(phi_ls, infidelity_BLK_ls, label='infidelity_BLK')
-plt.scatter(phi_ls, infidelity_BLK_ls)
+plt.plot(Tg_fold_ls, infidelity_BLK_ls, label='infidelity_BLK', linewidth=5)
+plt.scatter(Tg_fold_ls, infidelity_BLK_ls, linewidth=6)
 
-plt.xlabel(r'$\phi$')
-plt.ylabel('Infidelity')
+plt.xlabel(r'$T_g * K$', fontsize=18)
+plt.ylabel('Infidelity', fontsize=18)
 
-plt.legend()
+plt.xticks(fontsize=18)
+plt.yticks(fontsize=18)
+
+plt.legend(fontsize=18)
 plt.show()

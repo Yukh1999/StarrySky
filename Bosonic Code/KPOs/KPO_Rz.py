@@ -17,6 +17,8 @@ delta = 0  # 失谐
 K = 1  # 非线性强度
 p0 = 4 * K  # 双光子驱动强度
 
+p_ls = np.linspace(1, 10, 10) * K
+
 # 定义算符
 a = destroy(N)
 a_dag = a.dag()
@@ -28,22 +30,22 @@ logical_0 = coherent(N=20, alpha=alpha)
 logical_1 = coherent(N=20, alpha=-alpha)
 
 
-def P(_t, _phi, _Tg):
+def P(_t, _phi, _Tg, _p):
     """
     Two-photon driving amplitude
     """
 
-    return p0
+    return _p
 
 
-def P_d(_t, _phi, _Tg):
+def P_d(_t, _phi, _Tg, _p):
     """
     Driving pulse
     """
     return np.pi * _phi * np.sin(np.pi * _t / _Tg) / (8 * _Tg * np.sqrt(p0 / K))
 
 
-def gaussian(_t, _phi, _Tg):
+def gaussian(_t, _phi, _Tg, _p):
     """
     Gaussian wave
     """
@@ -51,14 +53,14 @@ def gaussian(_t, _phi, _Tg):
     return (np.pi / 2) / (sigma * np.sqrt(2 * np.pi)) * np.exp(-0.5 * (_t / sigma) ** 2)
 
 
-def tempPulse(_t, _phi, _Tg):
+def tempPulse(_t, _phi, _Tg, _p):
     """
     Temp pulse
     """
-    return np.sqrt(P(_t, _phi, _Tg) / K) * krotov.shapes.blackman(_t, 0, _Tg)
+    return np.sqrt(P(_t, _phi, _Tg, _p) / K) * krotov.shapes.blackman(_t, 0, _Tg)
 
 
-def blackman_pulse(_t, _phi, _Tg):
+def blackman_pulse(_t, _phi, _Tg, _p):
     """
     black man pulse
     """
@@ -153,21 +155,21 @@ def solve_fidelity(_ham, _initial_state, tls, args):
 # plot_wave(P_d, tlist, args=(phi, Tg))
 
 
-def get_fidelity_ham(tls, _phi, _Tg):
-    return solve_fidelity(ham, initial_state, tls, args=(_phi, _Tg))
+def get_fidelity_ham(tls, _phi, _Tg, _p):
+    return solve_fidelity(ham, initial_state, tls, args=(_phi, _Tg, _p))
 
 
-def get_fidelity_ham_blk(tls, _phi, _Tg):
-    return solve_fidelity(ham_black, initial_state, tls, args=(_phi, _Tg))
+def get_fidelity_ham_blk(tls, _phi, _Tg, _p):
+    return solve_fidelity(ham_black, initial_state, tls, args=(_phi, _Tg, _p))
 
 
 for Tg in Tg_ls:
     # 时间列表
     tlist = np.linspace(0, Tg, 100)
 
-    fidelity = get_fidelity_ham(tlist, phi, Tg)
+    fidelity = get_fidelity_ham(tlist, phi, Tg, p0)
     fidelity_ls.append(fidelity)
-    fidelity_BLK = get_fidelity_ham_blk(tlist, phi, Tg)
+    fidelity_BLK = get_fidelity_ham_blk(tlist, phi, Tg, p0)
     fidelity_BLK_ls.append(fidelity_BLK)
 
 fidelity_ls = np.array(fidelity_ls)

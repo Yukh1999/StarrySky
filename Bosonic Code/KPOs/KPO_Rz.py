@@ -35,7 +35,7 @@ def P(_t, _phi, _Tg, _p):
     if isChangeP_2:
         # 引入绝热变驱动强度
         energy_gap = 4 * _p
-        rate = 1 / (20 * energy_gap)
+        rate = 1 / (70 * energy_gap)
 
         # 线性变化
         t_mid = _Tg / 2
@@ -207,21 +207,25 @@ def get_fidelity_ham_blk(tls, _phi, _Tg, _p):
 
 
 # 时间列表
-tlist = np.linspace(0, Tg, 100)
+# tlist = np.linspace(0, Tg, 100)
 # plot_wave(P, tls=tlist, args=(phi, Tg, p0))
 # 求解一系列参数下的保真度
-for phi in phi_ls:
-    isChangeP_2 = True
-    # fidelity = get_fidelity_ham(tlist, phi, Tg, p0)
-    # fidelity_ls.append(fidelity)
-    fidelity_BLK = get_fidelity_ham_blk(tlist, phi, Tg, p0)
-    fidelity_BLK_ls.append(fidelity_BLK)
+# for phi in phi_ls:
+#     isChangeP_2 = True
+#     # fidelity = get_fidelity_ham(tlist, phi, Tg, p0)
+#     # fidelity_ls.append(fidelity)
+#     fidelity_BLK = get_fidelity_ham_blk(tlist, phi, Tg, p0)
+#     fidelity_BLK_ls.append(fidelity_BLK)
 
-# tlist = np.linspace(0, Tg, 100)
+energy_gap = 4 * p0
+rate = 1 / (1 * energy_gap)
+p0 = p0 + rate*(Tg/2)
+tlist = np.linspace(0, Tg, 100)
 # fidelity = get_fidelity_ham(tlist, phi, Tg, p0)
 # fidelity_ls.append(fidelity)
-# fidelity_BLK = get_fidelity_ham_blk(tlist, phi, Tg, p0)
-# fidelity_BLK_ls.append(fidelity_BLK)
+isChangeP_2 = False
+fidelity_BLK = get_fidelity_ham_blk(tlist, phi, Tg, p0)
+fidelity_BLK_ls.append(fidelity_BLK)
 
 # 原始脉冲保真度
 # fidelity_ls = np.array(fidelity_ls)
@@ -235,8 +239,8 @@ print('BLK_Infi: \n', infidelity_BLK_ls)
 
 # 存储数据
 # df = pd.DataFrame({'Infidelity_BLK': infidelity_BLK_ls, 'Infidelity_Ori': infidelity_ls})
-df = pd.DataFrame({'Infidelity_BLK': infidelity_BLK_ls})
-df.to_csv(f"Infidelity_Pchange_20.csv")
+# df = pd.DataFrame({'Infidelity_BLK': infidelity_BLK_ls})
+# df.to_csv(f"Infidelity_Pchange_20.csv")
 # df.to_csv(f"Infidelity_Pnotchange.csv")
 
 
@@ -262,4 +266,4 @@ def plot_Infi(x_ls, xlabel_name):
     plt.show()
 
 
-plot_Infi(phi_ls, xlabel_name=r'$\phi$')
+# plot_Infi(phi_ls, xlabel_name=r'$\phi$')
